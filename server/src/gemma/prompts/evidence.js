@@ -23,9 +23,14 @@ Decide whether the photo is consistent with the complaint.
 
 Output ONLY a single valid JSON object, no markdown, no commentary:
 - "supports_claim": true if the photo is consistent with the complaint.
-- "evidence_confidence": 0.0-1.0. How strongly the photo supports the claim.
-  A dark, blurry, or distant photo of the right thing should score LOW
-  confidence but still supports_claim=true.
+- "evidence_confidence": 0.0-1.0, measuring ONE thing only: how strongly this
+  photo supports the complaint.
+    * 1.0 = the photo plainly shows exactly what was reported
+    * 0.5 = something relevant is visible but unclear
+    * 0.0 = the photo gives no support at all
+  This is NOT your confidence in your own verdict. If supports_claim is false,
+  evidence_confidence MUST be 0.0. A dark, blurry or distant photo of the right
+  thing is supports_claim=true with LOW confidence.
 - "visible_elements": array of short phrases for what you actually see.
 - "mismatch_reason": if supports_claim is false, one short sentence on why.
   Otherwise null.

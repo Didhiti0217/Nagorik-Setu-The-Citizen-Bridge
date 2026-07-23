@@ -84,6 +84,15 @@ export async function verifyEvidence({ photo, claimText, summaryEn }) {
       temperature: 0.1,
       maxTokens: 1536,
     });
+
+    // Guard: the model sometimes reads `evidence_confidence` as "confidence in
+    // my verdict" rather than "confidence the photo supports the claim", and
+    // returns supports_claim=false with confidence 1.0. The prompt now says so
+    // explicitly, but a contradictory pair would render as a mismatched issue
+    // showing 100% evidence in the UI, so normalise it here as well.
+    if (!data.supports_claim && data.evidence_confidence > 0) {
+      data.evidence_confidence = 0;
+    }
     return { data, meta };
   } catch (err) {
     if (err instanceof GemmaParseError) {
