@@ -1,0 +1,33 @@
+# --- secrets: never commit. This repo becomes PUBLIC for judging. ---
+.env
+.env.*
+!.env.example
+secrets.env
+*.pem
+*.key
+kaggle.json
+
+# --- dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- build output ---
+dist/
+build/
+.vite/
+
+# --- uploads / runtime data ---
+server/uploads/
+*.log
+npm-debug.log*
+
+# --- os / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- eval scratch ---
+eval/out/
