@@ -1,0 +1,26 @@
+{
+  "name": "nagorik-setu-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nagorik Setu API — Gemma 4 powered civic issue triage for Gazipur City Corporation",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node scripts/seed.js",
+    "gemma:smoke": "node scripts/gemma-smoke.js",
+    "eval": "node eval/run.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "multer": "^2.0.0",
+    "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
