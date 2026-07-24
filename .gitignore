@@ -3,13 +3,19 @@
 # it stays in git history. These patterns are matched at ANY depth.
 .env
 .env.*
+# Catch ANY *.env file at any depth (atlas-credentials.env, db.env, prod.env…).
+# The committed example ends in .example, so it is not matched.
+*.env
 !.env.example
+!*.env.example
 secrets.env
 **/secrets.env
 secret*.env
 *secrets*.env
 *.secrets
+# "credentials" anywhere in the name, not only as a prefix.
 credentials*
+*credentials*
 *.pem
 *.key
 kaggle.json
