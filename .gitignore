@@ -45,3 +45,15 @@ Thumbs.db
 
 # --- eval scratch ---
 eval/out/
+
+# --- test photos: NEVER commit ---
+# Real-world civic photos used to validate Stage 3 locally. Many are stock/news
+# images with their own licenses; committing them to a public repo is a
+# copyright problem (CLAUDE.md §1 rule 5). Keep them local-only.
+server/eval/photos/*
+!server/eval/photos/README.md
+*.jpg
+*.jpeg
+*.png
+*.webp
+!client/**/*.svg

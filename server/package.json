@@ -13,6 +13,7 @@
     "gemma:smoke": "node scripts/gemma-smoke.js",
     "api:smoke": "node scripts/api-smoke.js",
     "copilot:check": "node scripts/copilot-check.js",
+    "evidence": "node scripts/evidence-test.js",
     "eval": "node eval/run.js",
     "eval:offline": "node eval/offline.js"
   },
