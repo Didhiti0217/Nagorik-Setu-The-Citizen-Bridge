@@ -24,6 +24,22 @@ Kaggle token appears anywhere in git history.
 > `plan.md`, `CLAUDE.md`, and these progress notes. Running `git init` in
 > `C:\Projects\Gemma-Hackathon\` would stage the secrets file. Don't.
 
+### 📄 Doc workflow — read before editing any doc
+
+`CLAUDE.md`, `plan.md`, `progress_participant_1.md` and `Competition-Link.txt` exist in
+**two places**. The parent folder holds the **editable originals**; `nagorik-setu/docs/`
+holds **generated copies** that get published to GitHub.
+
+Edit the parent copies. Then, from the repo root:
+
+```bash
+node scripts/sync-docs.mjs
+```
+
+It copies parent → `docs/`, reports what changed, and **refuses to copy any file
+containing a credential-shaped string** (verified: planting a real key makes it exit 1).
+Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
+
 ---
 
 ## 0. 📊 Completion tracker
