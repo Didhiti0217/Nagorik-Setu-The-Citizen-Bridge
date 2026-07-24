@@ -9,6 +9,7 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed": "node scripts/seed.js",
+    "seed:smoke": "node scripts/seed-smoke.js",
     "gemma:smoke": "node scripts/gemma-smoke.js",
     "api:smoke": "node scripts/api-smoke.js",
     "eval": "node eval/run.js"
