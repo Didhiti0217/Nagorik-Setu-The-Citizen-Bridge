@@ -1,0 +1,19 @@
+# Netlify config — alternative to Vercel. Pick whichever the team has an account on.
+#
+# In the Netlify UI: "Add new site" -> import the repo -> set Base directory to
+# `client`. Add the environment variable VITE_API_BASE (see below). Deploy.
+
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so a hard refresh on /dashboard or /transparency serves index.html
+# and lets react-router take over, instead of 404ing.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Set this in the Netlify dashboard, NOT here (it is environment-specific):
+#   VITE_API_BASE = https://nagorik-setu-api.onrender.com
