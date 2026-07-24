@@ -21,7 +21,7 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
   const overdue = sla && sla < new Date();
   return (
     <div
-      className={`issue-card sev-edge-${issue.severity}${selected ? ' selected' : ''}${flashing ? ' flash' : ''}`}
+      className={`issue-card${selected ? ' selected' : ''}${flashing ? ' flash' : ''}`}
       onClick={onClick}
     >
       <div className="row1">
