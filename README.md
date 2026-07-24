@@ -177,6 +177,28 @@ server/
     └── pipeline-demo.js   ← end-to-end dedupe demo, no DB needed
 ```
 
+## Project documentation
+
+The full engineering record is in [`docs/`](docs/):
+
+| Document | What it covers |
+|---|---|
+| [`docs/plan.md`](docs/plan.md) | Product design, the five-stage Gemma engine, architecture, execution plan, risk register |
+| [`docs/CLAUDE.md`](docs/CLAUDE.md) | Operating rules for the repo — competition constraints, architecture rules, code conventions |
+| [`docs/progress_participant_1.md`](docs/progress_participant_1.md) | Build log: measured results, critical findings, decisions log |
+| [`docs/Competition-Link.txt`](docs/Competition-Link.txt) | The competition this was built for |
+
+**Three findings in there worth reading even if you never run this code:**
+
+1. **Gemma 4 returns its reasoning as ordinary `parts[]` entries flagged `thought: true`,
+   before the answer.** Joining all parts gives you the reasoning trace instead of the
+   JSON — correct output that looks like a parse failure.
+2. **Thinking cannot be disabled** on 26B/31B (`thinkingConfig` → HTTP 400) and consumes
+   75–80% of output tokens. Too small a `maxOutputTokens` and the model reasons itself
+   out of budget and returns nothing.
+3. **Few-shot examples make it *faster*** — 597 thought tokens vs 945 without. Examples
+   give the model a template so it reasons less.
+
 ## Dependencies
 
 `express` · `mongoose` · `zod` · `multer` · `cors` · `dotenv` — see

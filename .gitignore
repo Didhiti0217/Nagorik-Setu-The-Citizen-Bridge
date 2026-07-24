@@ -1,11 +1,19 @@
 # --- secrets: never commit. This repo becomes PUBLIC for judging. ---
+# A credential pushed once cannot be un-published by deleting the file later;
+# it stays in git history. These patterns are matched at ANY depth.
 .env
 .env.*
 !.env.example
 secrets.env
+**/secrets.env
+secret*.env
+*secrets*.env
+*.secrets
+credentials*
 *.pem
 *.key
 kaggle.json
+.kaggle/
 
 # --- dependencies ---
 node_modules/
