@@ -89,9 +89,11 @@ Measured on labelled Gazipur reports via `gemma-4-26b-a4b-it`:
 
 In the live seeded system, **38 citizen reports collapse to 17 issues** — the ten Tongi-transformer reports, written across three scripts, correctly merge into one.
 
+Stage 3 was checked separately on **16 real-world civic photographs**. Given only the image, the model named the correct civic category on **16/16** (road collapse, exposed wiring, garbage, drainage failure, road blockade) and, when each photo was paired with an unrelated decoy complaint, rejected it on **16/16** — it does not rubber-stamp evidence.
+
 ## Limitations, honestly
 
-We state these plainly rather than let a judge find them. The demonstration corpus is **synthetic** — hand-written to exercise cross-lingual deduplication; every AI-derived field is produced by the real pipeline, but no live citizen submitted these reports. Accuracy numbers reflect agreement with our own labels, written by the same team that wrote the prompts, so they are optimistic. **Stage 3 (photo verification) has not yet been tested on a real photograph.** And while the model is open-weight and the offline path is built, we benchmarked on the hosted API, not on municipal hardware.
+We state these plainly rather than let a judge find them. The demonstration corpus is **synthetic** — hand-written to exercise cross-lingual deduplication; every AI-derived field is produced by the real pipeline, but no live citizen submitted these reports. Accuracy numbers reflect agreement with our own labels, written by the same team that wrote the prompts, so they are optimistic. Stage 3 was validated on real-world civic photographs but those images are third-party (used only to prove the capability, not as our own field data), and the seeded reports carry no photos, so evidence verification is not yet part of the end-to-end seeded numbers. And while the model is open-weight and the offline path is built, we benchmarked on the hosted API, not on municipal hardware.
 
 ## Future work and impact
 
