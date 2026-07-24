@@ -10,12 +10,16 @@ Owners: **P1** = Participant 1 (Dev A, Gemma engine) · **P2** = Farhan (Dev B, 
 
 ## 🔴 Blocking chain — do these in order, nothing else unblocks without them
 
+> ✅ **API IS LIVE:** https://nagorik-setu-api-ciee.onrender.com — deployed from THIS repo
+> (own Render account), CORS fixed and verified, connected to the seeded Atlas (17 issues).
+> Full endpoint suite passed 2026-07-24.
+
 | # | Task | Owner | Est. | Blocked by | Why it matters |
 |---|---|---|---|---|---|
-| 1 | **Redeploy the API on Render** to pick up the CORS fix (`344aca9`) | **P2** | 10 min | — | The live API sends **no `Access-Control-Allow-Origin` header**. It looks healthy to `curl` and fails in every browser. Until this ships, *any* hosted frontend shows an empty dashboard. |
-| 2 | Verify CORS is fixed: `curl -i -H "Origin: https://example.com" .../api/health` must show `access-control-allow-origin` | P2 | 5 min | 1 | Don't assume the redeploy worked. |
-| 3 | **Deploy the frontend** (Vercel/Netlify), set `VITE_API_BASE=https://nagorik-setu-api.onrender.com` | user | 10 min | 2 | Config is DONE (`client/vercel.json`, `netlify.toml`, `DEPLOY-FRONTEND.md`) — one import + one env var. The deploy itself needs a hosting account login. This is the demo URL judges click. **6 of 20 Functionality points.** |
-| 4 | Open the deployed URL in a **private window** — no login, no paywall | P1 | 5 min | 3 | Explicit competition rule. A demo that needs auth is disqualified. |
+| 1 | ~~Deploy the API on Render with the CORS fix~~ ✅ **DONE** — `nagorik-setu-api-ciee.onrender.com` | user | — | — | Deployed from own repo; CORS `*` confirmed, DB connected, /api/issues serves 17. |
+| 2 | ~~Verify CORS~~ ✅ **DONE** — `access-control-allow-origin: *` confirmed live | — | — | — | Health, issues, geojson, transparency, SSE all verified against the live URL. |
+| 3 | **Deploy the frontend** (Vercel), Root Dir `client`, `VITE_API_BASE=https://nagorik-setu-api-ciee.onrender.com` | user | 10 min | — | Config DONE (`client/vercel.json`, `DEPLOY-FRONTEND.md`). One import + one env var. **The demo URL judges click — 6 of 20 Functionality points.** |
+| 4 | Open the deployed URL in a **private window** — no login, no paywall | user | 5 min | 3 | Explicit competition rule. A demo that needs auth is disqualified. |
 
 ---
 
