@@ -8,6 +8,17 @@ Built for *Build with Gemma: ML, AI, Deep Learning & NLP Community Hackathon* (G
 > de-duplicated, photo-verified work queue for a city corporation — powered
 > end-to-end by a single open Gemma 4 model.
 
+## 🔗 Live demo
+
+- **App:** https://nagorik-setu.vercel.app
+  - **Citizen** (report a problem, Bangla): https://nagorik-setu.vercel.app/report
+  - **Councilor dashboard** (live map, ranked queue, copilot): https://nagorik-setu.vercel.app/dashboard
+  - **Transparency** (every raw Gemma 4 call): https://nagorik-setu.vercel.app/transparency
+- **API:** https://nagorik-setu-api-ciee.onrender.com/api/health
+
+No login required. Seeded with a synthetic corpus processed through the real pipeline
+(see [Data & licensing](#data--licensing)).
+
 ---
 
 ## The problem
