@@ -4,6 +4,10 @@
 **Track:** Dev A — `server/src/gemma/**`, `server/src/services/**` (per [plan.md](plan.md) §6)
 **Repo root:** `C:\Projects\Gemma-Hackathon\` · **Last updated:** 2026-07-24, session 1
 
+> **Dev B (backend · data · deploy) now has its own log: [progress_participant_2.md](progress_participant_2.md).**
+> The API is **built, deployed live, and seeded with real data**. The Dev B rows in the
+> tracker below have been updated to ✅; Dev A's technical sections are unchanged.
+
 ---
 
 ## ✅ DEV A IS COMPLETE (except real-photo validation, blocked on the team)
@@ -20,8 +24,15 @@ All five Gemma stages built, measured, and committed. Evaluation harness run.
 | PII detection | **flagged** |
 | Copilot tool planning | **4/4** |
 
-Full numbers: [`server/eval/RESULTS.md`](../server/eval/RESULTS.md) ·
+Published benchmark table (scores the **live seeded database**):
+[`server/eval/results.md`](../server/eval/results.md) ·
 honest per-error breakdown: [`server/eval/ERROR-ANALYSIS.md`](../server/eval/ERROR-ANALYSIS.md)
+
+> **Two harnesses, on purpose.** `eval/run.js` (Dev B) scores the real seeded MongoDB —
+> the system as deployed, and the source of `results.md`. `eval/offline.js` (Dev A) runs
+> its own 30-report labelled set through the pipeline with in-memory storage and **no
+> database**, for checking the engine in isolation after a prompt change. The numbers in
+> the table above are from the offline set; the live-data numbers are in `results.md`.
 
 **🌐 Public repo:** https://github.com/Didhiti0217/Gemma---AI---Hackathon-
 
@@ -45,46 +56,45 @@ Timeline; it is the most important number in the project and cannot be read whil
 
 > Update this table at every integration checkpoint (plan.md §6: H+10 / H+20 / H+30).
 
-### By build effort — **≈25% complete** (Dev A track done)
+### By build effort — **≈55% complete** (Dev A and Dev B tracks done)
 
 | Component | Owner | Status | Weight | Done |
 |---|---|---|---|---|
 | Gemma engine — 5 stages, adapter, schemas, prompts | A | ✅ complete | 15% | 15% |
 | Pipeline service (async, DI storage) | A | ✅ complete (on stubs) | 5% | 5% |
-| Mongo models + 2dsphere + routes + SSE | B | ⬜ not started | 20% | 0% |
+| Mongo models + 2dsphere + routes + SSE | B | ✅ complete · live | 20% | 20% |
 | Citizen PWA (Bangla, photo, geo) | C | ⬜ not started | 12% | 0% |
 | Councilor dashboard + Mapbox + copilot UI | C | ⬜ not started | 18% | 0% |
-| Seed corpus (~120 reports through the real pipeline) | B | ⬜ not started | 5% | 0% |
-| Deployment (Vercel / Render / Atlas) | B | ⬜ not started | 5% | 0% |
-| Eval harness + benchmark table | A | ✅ complete | 5% | 5% |
+| Seed corpus (real pipeline, deliberate clusters) | B | ✅ complete · 38→17 live | 5% | 5% |
+| Deployment (Render + Atlas) | B | ✅ complete · live | 5% | 5% |
+| Eval harness + benchmark table | A/B | ✅ complete · measured | 5% | 5% |
 | Demo video (≤3 min) | C | ⬜ not started | 7% | 0% |
 | Writeup + README + Kaggle notebook | all | ⬜ not started | 8% | 0% |
-| | | | **100%** | **25%** |
+| | | | **100%** | **55%** |
 
-### By rubric points — **≈40 / 100 secured**
+### By rubric points — **≈50 / 100 secured**
 
 | Criterion | Max | Secured | Reasoning |
 |---|---|---|---|
 | Gemma Integration | 30 | **~24** | Engine built *and empirically proven*: 5 stages, multimodal, injection-resistant, measured. Remaining 6 pts = making it visible in the demo and writeup. |
-| Innovation & Impact | 30 | **~12** | Differentiators designed; the hardest one (cross-lingual dedupe) is working. But a judge cannot see any of it without the app. |
-| Functionality | 20 | **~3** | No demo URL, no UI. **Largest exposure.** |
+| Innovation & Impact | 30 | **~14** | Cross-lingual dedupe now proven on **live real data** — 10 Tongi reports across 3 scripts merged to one issue, co-located negative control held. Still needs the UI to land visually with a judge. |
+| Functionality | 20 | **~11** | **Live public API, no login, 17 real deduplicated issues, verified end-to-end, `/api/transparency` with real latencies.** Remaining gap: the citizen + councilor UI (Dev C). |
 | Presentation & Writeup | 20 | **~1** | Nothing written yet. |
 
 ### Reading the gap
 
-The completed 20% is deliberately the **highest-risk, highest-differentiation** 20%.
-Every unknown is now resolved: audio settled, thinking-mode trap found, latency
-root-caused, dedupe proven on real data. **Nothing remaining on the critical path is
-research** — it is MERN CRUD, a map, and writing.
+The completed ~50% is the **highest-risk, highest-differentiation** half. Every unknown is
+resolved — audio settled, thinking-mode trap found, latency root-caused — and the backend
+is now **built, deployed and seeded with real data** ([progress_participant_2.md](progress_participant_2.md)).
+**Nothing remaining on the critical path is research** — it is the frontend, a map, and writing.
 
-But the arithmetic is unforgiving: **~44 hours left with ~80% of the build untouched**,
-and Functionality + Presentation are 40 points sitting at 4.
+Functionality jumped from 3 to ~11 the moment the API went live with real deduplicated data.
+The remaining ~50 points are concentrated in two places: the **UI (Dev C)** and the
+**writeup + video**.
 
-**The two highest-leverage moves right now:**
-1. **Deploy a hello-world today.** Worth more than any feature — it converts deployment
-   from an end-of-project risk into a solved problem.
-2. **Teammates start now.** Three parallel tracks is what makes 80%-in-44-hours work.
-   Sequential, it does not.
+**The two highest-leverage moves now:**
+1. ~~Deploy a hello-world today.~~ ✅ **Done** — full stack on Render + Atlas, live and seeded (Dev B).
+2. **Dev C starts the frontend now**, against the live populated API — it is the critical path.
 
 ---
 
@@ -97,7 +107,7 @@ and Functionality + Presentation are 40 points sitting at 4.
 | git | ✅ repo initialised at `nagorik-setu/` |
 | Python | ✅ 3.14 (not needed — no Python service, see plan.md §5) |
 | Ollama | ❌ not installed (deferred; only needed for the offline demo shot) |
-| MongoDB | ⬜ not yet — Dev B owns this |
+| MongoDB | ✅ Atlas M0 live (`nagorik-setu`), seeded — Dev B |
 
 **Security:** `.gitignore` was **commit #1**, before any other file existed. Verified
 `server/.env` and `secrets.env` are both ignored. The Kaggle token and the Gemma key
@@ -338,12 +348,12 @@ are in the smoke-test log above; copy them verbatim as fixtures.
 
 ### ⚠️ Blocking on other tracks
 
-| Need | Owner | Why it blocks |
+| Need | Owner | Status |
 |---|---|---|
-| MongoDB Atlas URI + Mongoose models | Dev B | Pipeline runs on in-memory stubs today; needs the real `$near` implementation |
-| Express routes + SSE | Dev B | `publish()` is stubbed; the live pin drop is the key demo shot |
-| Deploy hello-world | Dev B | plan.md says H+3. Do not let this slip. |
-| Fixtures from §4/§4b outputs | Dev C | Sample JSON is in the logs above — copy verbatim |
+| ~~MongoDB Atlas URI + Mongoose models~~ | Dev B | ✅ done — real `$geoNear` store live |
+| ~~Express routes + SSE~~ | Dev B | ✅ done — all routes + SSE live |
+| ~~Deploy hello-world~~ | Dev B | ✅ done — full stack deployed, not just hello-world |
+| Fixtures from §4/§4b outputs | Dev C | Superseded — Dev C can build against the **live API** now |
 
 ## 8. Decisions log
 

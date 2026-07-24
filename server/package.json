@@ -9,8 +9,12 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed": "node scripts/seed.js",
+    "seed:smoke": "node scripts/seed-smoke.js",
     "gemma:smoke": "node scripts/gemma-smoke.js",
-    "eval": "node eval/run.js"
+    "api:smoke": "node scripts/api-smoke.js",
+    "copilot:check": "node scripts/copilot-check.js",
+    "eval": "node eval/run.js",
+    "eval:offline": "node eval/offline.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -22,5 +26,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0"
   }
 }

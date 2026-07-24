@@ -1,0 +1,32 @@
+# Render blueprint for the Nagorik Setu API.
+#
+# Render (not Vercel) because the API holds long-lived SSE connections and
+# processes reports in a background task after responding 202 — both of which a
+# serverless function cannot do. A single always-on web service is the right fit
+# and the free tier is enough for judging.
+#
+# Deploy: push this repo, then in the Render dashboard "New +" -> "Blueprint",
+# point it at the repo, and set the two secret env vars below when prompted.
+# Full walkthrough in DEPLOY.md.
+services:
+  - type: web
+    name: nagorik-setu-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: GEMMA_PROVIDER
+        value: aistudio
+      - key: GEMMA_MODEL
+        value: gemma-4-26b-a4b-it
+      # Secrets — set these in the Render dashboard, never in this file.
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      # Lock this down to your deployed frontend origin before submission.
+      - key: CLIENT_ORIGIN
+        value: "*"
