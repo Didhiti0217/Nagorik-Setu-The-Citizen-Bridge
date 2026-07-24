@@ -14,7 +14,7 @@ Owners: **P1** = Participant 1 (Dev A, Gemma engine) · **P2** = Farhan (Dev B, 
 |---|---|---|---|---|---|
 | 1 | **Redeploy the API on Render** to pick up the CORS fix (`344aca9`) | **P2** | 10 min | — | The live API sends **no `Access-Control-Allow-Origin` header**. It looks healthy to `curl` and fails in every browser. Until this ships, *any* hosted frontend shows an empty dashboard. |
 | 2 | Verify CORS is fixed: `curl -i -H "Origin: https://example.com" .../api/health` must show `access-control-allow-origin` | P2 | 5 min | 1 | Don't assume the redeploy worked. |
-| 3 | **Deploy the frontend** (Vercel/Netlify), set `VITE_API_BASE=https://nagorik-setu-api.onrender.com` | P1 | 30 min | 2 | This is the demo URL judges click. **6 of the 20 Functionality points.** |
+| 3 | **Deploy the frontend** (Vercel/Netlify), set `VITE_API_BASE=https://nagorik-setu-api.onrender.com` | user | 10 min | 2 | Config is DONE (`client/vercel.json`, `netlify.toml`, `DEPLOY-FRONTEND.md`) — one import + one env var. The deploy itself needs a hosting account login. This is the demo URL judges click. **6 of 20 Functionality points.** |
 | 4 | Open the deployed URL in a **private window** — no login, no paywall | P1 | 5 min | 3 | Explicit competition rule. A demo that needs auth is disqualified. |
 
 ---
@@ -23,9 +23,9 @@ Owners: **P1** = Participant 1 (Dev A, Gemma engine) · **P2** = Farhan (Dev B, 
 
 | # | Task | Owner | Est. | Points | Notes |
 |---|---|---|---|---|---|
-| 5 | **Kaggle writeup, ≤1,500 words** | P1 | 3 h | **~18 of 20** | Largest single gap: Presentation is 20 pts sitting at ~2. Section budget in `plan.md` §10. Every number already measured. **Must disclose the synthetic corpus.** |
-| 6 | **Demo video, ≤3 min** | P3 | 3 h | ~6 | Shot list in `plan.md` §9. The live SSE pin-drop now genuinely works — film it in one unbroken take. |
-| 7 | **Kaggle notebook** demonstrating the Gemma pipeline | P2 | 1.5 h | required | A **required submission artifact**, not optional. Can wrap `eval/offline.js` — it needs no database. |
+| 5 | ~~Kaggle writeup, ≤1,500 words~~ ✅ **DONE** — `docs/WRITEUP.md`, 1,375 words | P1 | — | **~18 of 20** | All required sections; discloses the synthetic corpus and untested Stage 3. Needs one human pass + paste into Kaggle. |
+| 6 | **Demo video, ≤3 min** | P3 | 3 h | ~6 | Shot list in `plan.md` §9. The live SSE pin-drop now genuinely works — film it in one unbroken take. **Only a human can record this.** |
+| 7 | ~~Kaggle notebook~~ ✅ **DONE** — `notebook/nagorik-setu-gemma4.ipynb` | P1 | — | required | Runnable; both code cells verified against the live API. Upload to Kaggle as-is. |
 
 ---
 
