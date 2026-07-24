@@ -27,9 +27,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp({ processReport }) {
   const app = express();
 
-  const origins = process.env.CLIENT_ORIGIN
-    ? process.env.CLIENT_ORIGIN.split(',').map((s) => s.trim())
-    : '*';
+  // CLIENT_ORIGIN="*" must be passed to cors() as the STRING '*', never as
+  // ['*']. Given an array, cors treats it as a whitelist of exact origins, so
+  // ['*'] matches only a literal origin of "*" — i.e. nothing — and the
+  // response carries no Access-Control-Allow-Origin at all. The API then looks
+  // healthy to curl while every browser request fails with "Failed to fetch".
+  // render.yaml sets CLIENT_ORIGIN="*", so this path is the deployed one.
+  const raw = (process.env.CLIENT_ORIGIN || '').trim();
+  const origins = !raw || raw === '*' ? '*' : raw.split(',').map((s) => s.trim());
   app.use(cors({ origin: origins }));
   app.use(express.json({ limit: '2mb' }));
 
