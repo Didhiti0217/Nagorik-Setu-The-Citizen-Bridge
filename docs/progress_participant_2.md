@@ -15,6 +15,7 @@
 - **Negative control held live:** a co-located "broken overbridge stairs" report stayed a **separate** issue from the garbage pile at the same spot — dedupe is *semantic*, not proximity
 - **Audit trail:** 67 real Gemma calls logged (`/api/transparency`), p50 20.0s / p95 36.1s
 - **Offline proof (no key, no Atlas):** `npm run api:smoke` → 18/18 · `npm run seed:smoke` → 7/7
+- **Eval harness (`npm run eval`):** category **92.1%**, severity ±1 **100%**, dedupe F1 **1.0**, JSON parse **100%** ([server/eval/results.md](../server/eval/results.md))
 
 Commits (on `farhanishraq17/…` `main`): `49268c1` backend + deploy config · `3d83744` seed corpus + runner
 
@@ -135,8 +136,9 @@ Bazar's location with the garbage pile and **correctly stayed separate** (semant
 
 ## 7. Next actions (Dev B)
 
-- [ ] **Eval harness** (plan.md §8) — hand-label ~60 of the seeded reports → honest category/severity
-      accuracy + dedupe precision/recall + latency table for the writeup.
+- [x] ~~**Eval harness** (plan.md §8)~~ → done. 38 reports hand-labelled ([eval/gold.js](../server/eval/gold.js)),
+      scored by `npm run eval`: category 92.1%, severity exact 86.8% / ±1 100%, dedupe P/R/F1 1.0,
+      JSON 100%, triage p50/p95 22.3s/40.8s. Table in [server/eval/results.md](../server/eval/results.md).
 - [ ] Lock `CLIENT_ORIGIN` to the real frontend origin before submission.
 - [ ] (team) Rotate Atlas password + Gemma key post-hackathon.
 

@@ -50,7 +50,7 @@ Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
 
 > Update this table at every integration checkpoint (plan.md §6: H+10 / H+20 / H+30).
 
-### By build effort — **≈50% complete**
+### By build effort — **≈55% complete**
 
 | Component | Owner | Status | Weight | Done |
 |---|---|---|---|---|
@@ -61,10 +61,10 @@ Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
 | Councilor dashboard + Mapbox + copilot UI | C | ⬜ not started | 18% | 0% |
 | Seed corpus (real pipeline, deliberate clusters) | B | ✅ complete · 38→17 live | 5% | 5% |
 | Deployment (Render + Atlas) | B | ✅ complete · live | 5% | 5% |
-| Eval harness + benchmark table | A | ⬜ not started | 5% | 0% |
+| Eval harness + benchmark table | A/B | ✅ complete · measured | 5% | 5% |
 | Demo video (≤3 min) | C | ⬜ not started | 7% | 0% |
 | Writeup + README + Kaggle notebook | all | ⬜ not started | 8% | 0% |
-| | | | **100%** | **50%** |
+| | | | **100%** | **55%** |
 
 ### By rubric points — **≈50 / 100 secured**
 
