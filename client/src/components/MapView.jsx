@@ -22,26 +22,29 @@ const CENTER = [
 ];
 const ZOOM = Number(import.meta.env.VITE_MAP_ZOOM) || 11;
 
-/* A raster-only style: no token, no styling service, works anywhere. */
+/* A raster-only style: no token, no styling service.
+ *
+ * CARTO's dark basemap, NOT raw OpenStreetMap tiles. tile.openstreetmap.org
+ * blocks many hosted origins (the map rendered black on Vercel), whereas the
+ * CARTO CDN serves reliably. It is also already dark, so it matches the UI and
+ * keeps the severity colours the brightest thing on screen — no dim overlay
+ * needed. Multiple subdomains let the browser parallelise tile loads. */
 const STYLE = {
   version: 8,
   sources: {
-    osm: {
+    carto: {
       type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tiles: [
+        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+      ],
       tileSize: 256,
-      attribution: '© OpenStreetMap contributors',
+      attribution: '© OpenStreetMap contributors © CARTO',
     },
   },
-  layers: [
-    { id: 'osm', type: 'raster', source: 'osm' },
-    // Darken the base so severity colour is the brightest thing on screen.
-    {
-      id: 'dim',
-      type: 'background',
-      paint: { 'background-color': '#0d1117', 'background-opacity': 0.45 },
-    },
-  ],
+  layers: [{ id: 'carto', type: 'raster', source: 'carto' }],
 };
 
 const SEVERITY_COLOUR = [
