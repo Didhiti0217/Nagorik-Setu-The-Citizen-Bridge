@@ -12,7 +12,7 @@
  * those thought tokens are billed against the output budget. Measured triage
  * reasoning alone runs 450+ tokens, so budgets here are deliberately roomy.
  */
-import { generateJson, GemmaParseError } from './client.js';
+import { generateJson, GemmaError, GemmaParseError } from './client.js';
 import {
   TriageSchema,
   EvidenceSchema,
@@ -33,7 +33,7 @@ import {
   version as copilotVersion,
 } from './prompts/copilot.js';
 
-export { setCallLogger, setMockFixture, activeConfig, GemmaParseError } from './client.js';
+export { setCallLogger, setMockFixture, activeConfig, GemmaError, GemmaParseError } from './client.js';
 export * from './schemas.js';
 
 /* ---------------------------------------------------------------- *
@@ -51,14 +51,21 @@ export async function triageReport({ text, photo, audio, areaHint }) {
       parts: buildTriagePrompt({ text, photo, audio, areaHint }),
       schema: TriageSchema,
       temperature: 0.1,
-      maxTokens: 2048,
+      // Measured: reasoning alone has hit 2045 tokens on a routine report.
+      // generate() doubles this on budget exhaustion, so this is a starting
+      // point rather than a ceiling.
+      maxTokens: 3072,
     });
     return { data, meta, manualReview: false };
   } catch (err) {
-    if (err instanceof GemmaParseError) {
+    // Catches every GemmaError, not just parse failures. An earlier version
+    // caught only GemmaParseError, so a budget-exhaustion or transport error
+    // escaped and broke the documented "never throws" contract that Dev B's
+    // routes are built on. The evaluation harness found this on report 6 of 30.
+    if (err instanceof GemmaError) {
       return {
         data: manualReviewFallback(err.message),
-        meta: { repaired: false, failed: true },
+        meta: { repaired: false, failed: true, reason: err.message },
         manualReview: true,
       };
     }
@@ -95,7 +102,7 @@ export async function verifyEvidence({ photo, claimText, summaryEn }) {
     }
     return { data, meta };
   } catch (err) {
-    if (err instanceof GemmaParseError) {
+    if (err instanceof GemmaError) {
       return {
         data: {
           supports_claim: true,
@@ -142,7 +149,7 @@ export async function findDuplicate({ report, candidates }) {
     }
     return { data, meta };
   } catch (err) {
-    if (err instanceof GemmaParseError) {
+    if (err instanceof GemmaError) {
       return {
         data: { is_duplicate: false, candidate_index: null, confidence: 0, reason: 'Duplicate check failed; treated as a new issue.' },
         meta: { failed: true, reason: err.message },

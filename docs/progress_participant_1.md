@@ -2,43 +2,42 @@
 
 **Project:** Nagorik Setu (নাগরিক সেতু) · Build with Gemma 4 · Kaggle Bangladesh
 **Track:** Dev A — `server/src/gemma/**`, `server/src/services/**` (per [plan.md](plan.md) §6)
-**Repo:** `nagorik-setu/` (its own git repo — strategy docs and `secrets.env` stay OUTSIDE it)
-**Last updated:** 2026-07-24, session 1
+**Repo root:** `C:\Projects\Gemma-Hackathon\` · **Last updated:** 2026-07-24, session 1
 
 ---
 
-## ✅ STATUS: Gemma engine + pipeline working end-to-end, committed
+## ✅ DEV A IS COMPLETE (except real-photo validation, blocked on the team)
 
-- Smoke test: **10/10 triage cases clean, 0 repairs, 0 manual-review, 0 exceptions**
-- Pipeline: **9 reports → 5 issues (44% duplicate collapse)**, cross-lingual
-- Latency investigated, root-caused, and **solved architecturally** (§5)
+All five Gemma stages built, measured, and committed. Evaluation harness run.
 
-Commits: `0ebc195` gitignore-first · `96eaf14` engine + pipeline · `05bf4ee` evidence fix · `18c769b` README + LICENSE
+| Evidence | Result |
+|---|---|
+| Triage category accuracy | **29/30 (96.7%)** |
+| Severity within ±1 | **30/30 (100%)** |
+| JSON parse success | **30/30**, 0 repairs, 0 manual-review |
+| Dedupe precision / recall | **90.9% / 100%** (F1 95.2%) |
+| Prompt injection | **resisted** |
+| PII detection | **flagged** |
+| Copilot tool planning | **4/4** |
 
-**🌐 Public repo — LIVE:** https://github.com/Didhiti0217/Gemma---AI---Hackathon-
-`main` pushed 2026-07-24. 17 files, no secrets. Verified: neither the Gemma key nor the
-Kaggle token appears anywhere in git history.
+Full numbers: [`server/eval/RESULTS.md`](../server/eval/RESULTS.md) ·
+honest per-error breakdown: [`server/eval/ERROR-ANALYSIS.md`](../server/eval/ERROR-ANALYSIS.md)
 
-> ⚠️ **Only `nagorik-setu/` is pushed.** The parent folder is NOT a git repo and must
-> never become one — it holds `secrets.env` (live Kaggle token + Gemma API key),
-> `plan.md`, `CLAUDE.md`, and these progress notes. Running `git init` in
-> `C:\Projects\Gemma-Hackathon\` would stage the secrets file. Don't.
+**🌐 Public repo:** https://github.com/Didhiti0217/Gemma---AI---Hackathon-
 
-### 📄 Doc workflow — read before editing any doc
+> ⚠️ **`secrets.env` now lives INSIDE the repo root.** It is gitignored (`.gitignore`
+> matches it at any depth, plus `credentials*`, `*.pem`, `*.key`), and neither the Kaggle
+> token nor the Gemma key appears anywhere in git history — verified. But the safety
+> margin is thinner than before: one `git add -f` or one careless `.gitignore` edit
+> publishes a live credential. **Recommended: move `secrets.env` outside the project
+> entirely** and point `server/.env` at it.
 
-`CLAUDE.md`, `plan.md`, `progress_participant_1.md` and `Competition-Link.txt` exist in
-**two places**. The parent folder holds the **editable originals**; `nagorik-setu/docs/`
-holds **generated copies** that get published to GitHub.
+### ⏳ Deadline
 
-Edit the parent copies. Then, from the repo root:
-
-```bash
-node scripts/sync-docs.mjs
-```
-
-It copies parent → `docs/`, reports what changed, and **refuses to copy any file
-containing a credential-shaped string** (verified: planting a real key makes it exit 1).
-Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
+Kaggle shows "2 days to go" as of 2026-07-24 08:52 Dhaka. The countdown rounds down, so
+remaining is **between 48 and 72 hours** — likely ~69h if it closes 23:59 UTC on the 26th.
+**Plan against 48h.** Someone logged in should confirm the exact time on Overview →
+Timeline; it is the most important number in the project and cannot be read while signed out.
 
 ---
 
@@ -46,7 +45,7 @@ Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
 
 > Update this table at every integration checkpoint (plan.md §6: H+10 / H+20 / H+30).
 
-### By build effort — **≈20% complete**
+### By build effort — **≈25% complete** (Dev A track done)
 
 | Component | Owner | Status | Weight | Done |
 |---|---|---|---|---|
@@ -57,10 +56,10 @@ Never hand-edit `nagorik-setu/docs/` — the next sync overwrites it.
 | Councilor dashboard + Mapbox + copilot UI | C | ⬜ not started | 18% | 0% |
 | Seed corpus (~120 reports through the real pipeline) | B | ⬜ not started | 5% | 0% |
 | Deployment (Vercel / Render / Atlas) | B | ⬜ not started | 5% | 0% |
-| Eval harness + benchmark table | A | ⬜ not started | 5% | 0% |
+| Eval harness + benchmark table | A | ✅ complete | 5% | 5% |
 | Demo video (≤3 min) | C | ⬜ not started | 7% | 0% |
 | Writeup + README + Kaggle notebook | all | ⬜ not started | 8% | 0% |
-| | | | **100%** | **20%** |
+| | | | **100%** | **25%** |
 
 ### By rubric points — **≈40 / 100 secured**
 

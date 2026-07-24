@@ -193,11 +193,17 @@ async function callAiStudio({ stage, parts, json, temperature, maxTokens, signal
     // Thinking is billed against maxOutputTokens. When the budget is too
     // tight the model spends all of it reasoning and emits no answer at all.
     if (reason === 'MAX_TOKENS') {
-      throw new GemmaError(
+      // Retryable, because generate() responds by DOUBLING the budget rather
+      // than repeating an identical doomed call. How much a model reasons
+      // varies run to run on the same input, so a fixed budget will always
+      // fail eventually — escalation is the only stable fix.
+      const err = new GemmaError(
         `Gemma spent the entire token budget on reasoning (${thoughtTokens} thought tokens) ` +
-          `and produced no answer. Raise maxTokens for stage "${stage}".`,
-        { provider: 'aistudio', retryable: false },
+          `and produced no answer for stage "${stage}".`,
+        { provider: 'aistudio', retryable: true },
       );
+      err.exhaustedBudget = true;
+      throw err;
     }
     throw new GemmaError(`AI Studio returned no text (finishReason: ${reason})`, {
       provider: 'aistudio',
@@ -325,6 +331,9 @@ export async function generate({
   const startedAt = Date.now();
 
   let lastError;
+  // Escalates when the model reasons itself out of budget (see MAX_TOKENS above).
+  let effectiveMaxTokens = maxTokens ?? DEFAULT_MAX_TOKENS;
+
   for (let attempt = 0; attempt <= cfg.maxRetries; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), cfg.timeoutMs);
@@ -334,7 +343,7 @@ export async function generate({
         parts: ordered,
         json,
         temperature,
-        maxTokens,
+        maxTokens: effectiveMaxTokens,
         signal: controller.signal,
       });
       const latencyMs = Date.now() - startedAt;
@@ -359,6 +368,17 @@ export async function generate({
       const aborted = err.name === 'AbortError';
       const retryable = aborted || err.retryable || err instanceof TypeError;
       if (attempt === cfg.maxRetries || !retryable) break;
+
+      if (err.exhaustedBudget) {
+        // Give it room to finish the thought AND write the answer. Capped so a
+        // pathological input cannot run away with the token budget.
+        effectiveMaxTokens = Math.min(effectiveMaxTokens * 2, 8192);
+        console.warn(
+          `[gemma] stage "${stage}" exhausted its budget on reasoning; ` +
+            `retrying with maxTokens=${effectiveMaxTokens}`,
+        );
+      }
+
       // Exponential backoff with jitter — AI Studio free tier is ~15 RPM.
       const backoff = 500 * 2 ** attempt + Math.random() * 250;
       await new Promise((r) => setTimeout(r, backoff));

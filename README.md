@@ -42,19 +42,43 @@ verifiable at a glance, not just claimed.
 
 ### Measured results
 
-Run against `gemma-4-26b-a4b-it` via Google AI Studio:
+Evaluated on 30 labelled reports against `gemma-4-26b-a4b-it` via Google AI Studio.
+Full numbers in [`server/eval/RESULTS.md`](server/eval/RESULTS.md); every individual error
+is examined in [`server/eval/ERROR-ANALYSIS.md`](server/eval/ERROR-ANALYSIS.md).
 
-| Test | Result |
+| Metric | Result |
 |---|---|
-| Triage on 10 deliberately hostile inputs | **10/10 clean** — 0 repairs, 0 manual-review, 0 exceptions |
-| Pure Bangla / Banglish / phonetic-Latin script | ✅ all handled correctly |
-| PII detection (phone number + name) | ✅ flagged |
-| **Prompt-injection attempt** | ✅ **defeated** — ignored the injected JSON, triaged the real content correctly |
-| Duplicate clustering on a 9-report burst | **9 reports → 5 issues (44% collapse)** |
-| Cross-lingual merge | ✅ 4 reports in Bangla + English + Banglish recognised as **one** transformer |
-| Dedupe negative control | ✅ refused to merge a water outage with an electrical hazard 30 m away |
+| Triage category accuracy | **29/30 (96.7%)** |
+| Severity within ±1 | **30/30 (100%)** |
+| Severity exact match | 21/30 (70%) |
+| JSON schema-valid output | **30/30** — 0 repair passes, 0 manual-review fallbacks |
+| Dedupe pairwise precision / recall | **90.9% / 100%** (F1 95.2%) |
+| Copilot tool planning | **4/4** |
 
-Reproduce both with `npm run gemma:smoke` and `node scripts/pipeline-demo.js`.
+By input language — the Bangla-first claim, tested:
+
+| Language | n | Category accuracy | Severity ±1 |
+|---|---|---|---|
+| Bangla | 10 | **100%** | 100% |
+| Banglish (Latin script) | 6 | **100%** | 100% |
+| English | 14 | 92.9% | 100% |
+
+Safety behaviours:
+
+| Check | Result |
+|---|---|
+| **Prompt-injection attempt** | ✅ **resisted** — ignored injected JSON, triaged the real content |
+| PII detection (phone number + name) | ✅ flagged |
+| Copilot on an empty result set | ✅ reported "no data" rather than inventing a count |
+| Cross-lingual merge | ✅ 4 reports in Bangla + English + Banglish recognised as **one** transformer |
+
+**We report the pessimistic figures.** The single category "miss" was an input reading only
+`"help"`, which is not classifiable by anyone — the label was arbitrary. The single "false
+merge" joined two reports about *the same drain on the same road*, which is arguably
+correct and arguably a bad label. Both are dissected in the error analysis rather than
+smoothed over.
+
+Reproduce: `npm run eval`, `npm run gemma:smoke`, `node scripts/pipeline-demo.js`.
 
 ---
 
@@ -184,7 +208,7 @@ The full engineering record is in [`docs/`](docs/):
 | Document | What it covers |
 |---|---|
 | [`docs/plan.md`](docs/plan.md) | Product design, the five-stage Gemma engine, architecture, execution plan, risk register |
-| [`docs/CLAUDE.md`](docs/CLAUDE.md) | Operating rules for the repo — competition constraints, architecture rules, code conventions |
+| [`CLAUDE.md`](CLAUDE.md) | Operating rules for the repo — competition constraints, architecture rules, code conventions |
 | [`docs/progress_participant_1.md`](docs/progress_participant_1.md) | Build log: measured results, critical findings, decisions log |
 | [`docs/Competition-Link.txt`](docs/Competition-Link.txt) | The competition this was built for |
 

@@ -15,7 +15,7 @@
 import { textPart } from '../client.js';
 import { CATEGORIES } from '../schemas.js';
 
-export const version = 'copilot@2';
+export const version = 'copilot@3';
 
 const TOOL_SPEC = `Available tools:
 
@@ -31,6 +31,22 @@ const TOOL_SPEC = `Available tools:
 Argument types (use null when the user did not specify):
   category      : ${CATEGORIES.join(' | ')} | null
   min_severity  : integer 1-5 | null
+
+Category meanings — map the councilor's everyday words onto these exactly:
+  hazard         : anything that can injure or kill someone soon — live or fallen
+                   electric wires, sparking transformers, gas leaks, fire risk,
+                   open manholes, missing drain covers, collapsing structures.
+                   "electrical" + "dangerous"/"life-threatening" is ALWAYS hazard.
+  utility        : services that are out but not dangerous — streetlights,
+                   routine power outages, cable faults.
+  water          : supply outages, low pressure, contaminated drinking water.
+  sanitation     : drains, sewerage, overflowing drainage, mosquitoes, health risk.
+  waste          : uncollected rubbish, illegal dumping, garbage piles.
+  infrastructure : roads, footpaths, bridges, potholes, flooding of roads.
+  traffic        : congestion, signals, illegal parking, road obstruction.
+
+When a question mixes a domain with danger ("dangerous electrical faults"),
+danger wins: choose hazard, not the domain category.
   days          : integer 1-365 | null   (how far back to look)
   area          : string | null          (ward, road, market or area name)
   status        : "open" | "dispatched" | "resolved" | null
