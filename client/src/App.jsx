@@ -1,7 +1,9 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
 import { LangProvider, useLang } from './i18n/index.jsx';
+import LandingPage from './pages/Landing.jsx';
 import ReportPage from './pages/Report.jsx';
+import MyComplaintsPage from './pages/MyComplaints.jsx';
 import DashboardPage from './pages/Dashboard.jsx';
 import TransparencyPage from './pages/Transparency.jsx';
 
@@ -24,18 +26,33 @@ function Nav() {
   );
 }
 
+// Every screen except the landing splash shares the top nav.
+function AppLayout() {
+  return (
+    <>
+      <Nav />
+      <Outlet />
+    </>
+  );
+}
+
 export default function App() {
   return (
     // The citizen app is the front door and defaults to Bangla; the dashboard
     // flips itself to English on mount (see Dashboard.jsx).
     <LangProvider initial="bn">
-      <Nav />
       <Routes>
-        <Route path="/" element={<Navigate to="/report" replace />} />
+        {/* Full-bleed splash, no nav — the whole screen taps through to /report. */}
+        <Route path="/" element={<LandingPage />} />
+        {/* Citizen pages carry their own sidebar (see Sidebar.jsx), so they sit
+            outside the top-nav layout. */}
         <Route path="/report" element={<ReportPage />} />
+        <Route path="/my-complaints" element={<MyComplaintsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/transparency" element={<TransparencyPage />} />
-        <Route path="*" element={<Navigate to="/report" replace />} />
+        <Route element={<AppLayout />}>
+          <Route path="/transparency" element={<TransparencyPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </LangProvider>
   );

@@ -5,14 +5,21 @@
  * stat that matters most is the collapse ratio: N citizen reports became M
  * tickets. That single number is the product's whole argument.
  *
- * Live updates arrive over SSE, so a report submitted on a phone lands on this
- * map without a refresh. That is the demo's proof-of-realness shot (plan.md §9).
+ * Layout: the crimson nav rail (left), a scrollable grid of square issue cards
+ * (centre), and the Copilot chat (right). Live updates arrive over SSE, so a
+ * report submitted on a phone lands here without a refresh — the new card flashes
+ * and scrolls into view.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
+import Sidebar from '../components/Sidebar.jsx';
+import Topbar from '../components/Topbar.jsx';
+import MobileTopbar from '../components/MobileTopbar.jsx';
+import MobileNav from '../components/MobileNav.jsx';
 import MapView from '../components/MapView.jsx';
 import IssueDrawer from '../components/IssueDrawer.jsx';
-import CopilotBar from '../components/CopilotBar.jsx';
+import CopilotChat from '../components/CopilotChat.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
 
@@ -20,34 +27,38 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
   const sla = issue.slaDueAt ? new Date(issue.slaDueAt) : null;
   const overdue = sla && sla < new Date();
   return (
-    <div
-      className={`issue-card${selected ? ' selected' : ''}${flashing ? ' flash' : ''}`}
+    <button
+      type="button"
+      className={`d2-card${selected ? ' selected' : ''}${flashing ? ' flash' : ''}`}
       onClick={onClick}
     >
-      <div className="row1">
+      <div className="d2-card-top">
         <span className={`sev sev-${issue.severity}`}>S{issue.severity}</span>
-        <span className="chip">{categoryLabel(issue.category)}</span>
-        {issue.reportCount > 1 && (
-          <span className="chip count">{issue.reportCount} reports</span>
-        )}
-        {issue.dispatchBrief?.priority && (
-          <span className="chip">{issue.dispatchBrief.priority}</span>
-        )}
+        <span className="d2-chip">{categoryLabel(issue.category)}</span>
+        {issue.reportCount > 1 && <span className="d2-chip count">{issue.reportCount}×</span>}
       </div>
-      <p className="summary">{issue.summaryEn || issue.summaryBn}</p>
-      <div className="meta">
+
+      <p className="d2-card-summary">{issue.summaryEn || issue.summaryBn}</p>
+
+      <div className="d2-card-meta">
         {issue.inferredLocation && <span>📍 {issue.inferredLocation}</span>}
         {issue.department && <span>{issue.department}</span>}
-        {sla && <span style={overdue ? { color: 'var(--sev-5)' } : undefined}>
-          SLA {overdue ? 'overdue' : sla.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </span>}
       </div>
-    </div>
+
+      <div className="d2-card-foot">
+        {issue.dispatchBrief?.priority && <span className="d2-chip">{issue.dispatchBrief.priority}</span>}
+        {sla && (
+          <span className={`d2-sla${overdue ? ' overdue' : ''}`}>
+            SLA {overdue ? 'overdue' : sla.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
 
 export default function DashboardPage() {
-  const { setLang, category } = useLang();
+  const { setLang, category, t } = useLang();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,7 +66,15 @@ export default function DashboardPage() {
   const [flashId, setFlashId] = useState(null);
   const [live, setLive] = useState(false);
   const [highlightIds, setHighlightIds] = useState(null);
+  const [view, setView] = useState('cards'); // 'cards' | 'map'
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const queueRef = useRef(null);
+  const location = useLocation();
+
+  // The mobile bottom-nav Chat button routes here with this state to pop the chat.
+  useEffect(() => {
+    if (location.state?.openChat) setMobileChatOpen(true);
+  }, [location.state?.openChat]);
 
   // Municipal officers work in English; the citizen app stays Bangla.
   useEffect(() => { setLang('en'); }, [setLang]);
@@ -112,75 +131,105 @@ export default function DashboardPage() {
   const selected = issues.find((i) => i._id === selectedId) || null;
 
   return (
-    <div className="dash">
-      <aside className="dash-side">
-        <div className="side-head">
-          <h2>Work queue — Gazipur City Corporation</h2>
-          <p>
-            Ranked by priority ·{' '}
-            <span className={`live-badge${live ? ' on' : ''}`}>
-              <span className="dot" />
-              {live ? 'live' : 'connecting'}
-            </span>
-          </p>
+    <div className="dash2">
+      <Sidebar />
+
+      <main className="dash2-main">
+        <MobileTopbar />
+        <Topbar />
+
+        <Link to="/report" className="d2-newreport">+ {t('newReportBtn')}</Link>
+
+        <div className="dash2-head">
+          <div className="dash2-titles">
+            <h2>Work queue — Gazipur City Corporation</h2>
+            <p>
+              Ranked by priority ·{' '}
+              <span className={`live-badge${live ? ' on' : ''}`}>
+                <span className="dot" />
+                {live ? 'live' : 'connecting'}
+              </span>
+            </p>
+          </div>
+          <div className="d2-toggle" role="tablist" aria-label="View">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'cards'}
+              className={view === 'cards' ? 'active' : ''}
+              onClick={() => setView('cards')}
+            >
+              ▦ Cards
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'map'}
+              className={view === 'map' ? 'active' : ''}
+              onClick={() => setView('map')}
+            >
+              ◍ Map
+            </button>
+          </div>
         </div>
 
-        <div className="stats">
-          <div className="stat">
+        <div className="d2-stats">
+          <div className="d2-stat">
             <b>{stats.reports}</b>
             <span>Reports</span>
           </div>
-          <div className="stat">
+          <div className="d2-stat">
             <b>{stats.issues}</b>
             <span>Issues</span>
           </div>
-          <div className="stat" title="Duplicate tickets removed by Gemma">
-            <b style={{ color: 'var(--brand-bright)' }}>−{stats.collapsed}</b>
+          <div className="d2-stat" title="Duplicate tickets removed by Gemma">
+            <b className="accent">−{stats.collapsed}</b>
             <span>Deduped</span>
           </div>
-          <div className="stat">
-            <b style={{ color: 'var(--sev-5)' }}>{stats.urgent}</b>
+          <div className="d2-stat">
+            <b className="danger">{stats.urgent}</b>
             <span>Urgent</span>
           </div>
         </div>
 
         {highlightIds && (
-          <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)' }}>
-            <button className="btn ghost" onClick={() => setHighlightIds(null)}>
-              ← Clear copilot filter ({visible.length} shown)
-            </button>
-          </div>
+          <button className="d2-clear" onClick={() => setHighlightIds(null)}>
+            ← Clear copilot filter ({visible.length} shown)
+          </button>
         )}
 
-        <div className="queue" ref={queueRef}>
-          {loading && <div className="loading">Loading issues…</div>}
-          {error && <div className="empty">Could not load issues.<br />{error}</div>}
-          {!loading && !error && visible.length === 0 && (
-            <div className="empty">No issues match.</div>
-          )}
-          {visible.map((issue) => (
-            <IssueCard
-              key={issue._id}
-              issue={issue}
-              categoryLabel={category}
-              selected={issue._id === selectedId}
-              flashing={issue._id === flashId}
-              onClick={() => setSelectedId(issue._id)}
-            />
-          ))}
-        </div>
+        {view === 'cards' ? (
+          <div className="d2-cards no-scrollbar" ref={queueRef}>
+            {loading && <div className="d2-empty">Loading issues…</div>}
+            {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
+            {!loading && !error && visible.length === 0 && <div className="d2-empty">No issues match.</div>}
+            {visible.map((issue) => (
+              <IssueCard
+                key={issue._id}
+                issue={issue}
+                categoryLabel={category}
+                selected={issue._id === selectedId}
+                flashing={issue._id === flashId}
+                onClick={() => setSelectedId(issue._id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="d2-map">
+            <MapView issues={visible} selectedId={selectedId} flashId={flashId} onSelect={setSelectedId} />
+          </div>
+        )}
+      </main>
+
+      {/* Right column: the Copilot chat, with the issue drawer sliding in over
+          it when a card is opened. The chat stays mounted underneath so its
+          conversation survives closing the drawer. */}
+      <aside className={`dash2-aside${mobileChatOpen ? ' chat-open' : ''}`}>
+        <CopilotChat onHighlight={setHighlightIds} onClose={() => setMobileChatOpen(false)} />
+        {selected && <IssueDrawer issue={selected} onClose={() => setSelectedId(null)} />}
       </aside>
 
-      <main className="dash-main">
-        <MapView
-          issues={visible}
-          selectedId={selectedId}
-          flashId={flashId}
-          onSelect={setSelectedId}
-        />
-        <CopilotBar onHighlight={setHighlightIds} />
-        {selected && <IssueDrawer issue={selected} onClose={() => setSelectedId(null)} />}
-      </main>
+      <MobileNav />
     </div>
   );
 }

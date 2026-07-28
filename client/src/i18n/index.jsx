@@ -38,7 +38,15 @@ export const STRINGS = {
     // shared
     dashboard: 'ড্যাশবোর্ড',
     report: 'রিপোর্ট',
+    myComplaints: 'আমার অভিযোগ',
     transparency: 'স্বচ্ছতা',
+    notifications: 'নোটিফিকেশন',
+    chat: 'চ্যাট',
+    newReportBtn: 'নতুন রিপোর্ট',
+    noNotifications: 'এখনো কোনো নোটিফিকেশন নেই',
+    close: 'বন্ধ করুন',
+    comingSoon: 'শীঘ্রই আসছে',
+    comingSoonHint: 'এই বিভাগটি শীঘ্রই যুক্ত করা হবে',
   },
   en: {
     appName: 'Nagorik Setu',
@@ -65,7 +73,15 @@ export const STRINGS = {
     noPhoto: 'No photo',
     dashboard: 'Dashboard',
     report: 'Report',
+    myComplaints: 'My Complaints',
     transparency: 'Transparency',
+    notifications: 'Notifications',
+    chat: 'Chat',
+    newReportBtn: 'New Report',
+    noNotifications: 'No notifications yet',
+    close: 'Close',
+    comingSoon: 'Coming soon',
+    comingSoonHint: 'This section will be added soon',
   },
 };
 

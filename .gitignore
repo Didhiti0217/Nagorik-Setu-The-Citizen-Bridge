@@ -57,3 +57,14 @@ server/eval/photos/*
 *.png
 *.webp
 !client/**/*.svg
+
+# --- our own UI raster assets (logo, landing art) ---
+# The blanket *.png/*.jpg rules above exist to keep stray/licensed photos out of
+# this public repo; our own branding assets under client/src/images must ship.
+!client/src/images/*.png
+!client/src/images/*.jpg
+!client/src/images/*.jpeg
+!client/src/images/*.webp
+
+# --- local design-tool cache, not source ---
+.impeccable/

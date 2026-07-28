@@ -1,5 +1,5 @@
 /**
- * The citizen app. One screen, Bangla by default.
+ * The citizen app. Bangla by default.
  *
  * Deliberately has no category dropdown, no severity picker, no department
  * selector — a resident should not have to know how a city corporation is
@@ -8,9 +8,17 @@
  *
  * After submitting we show what Gemma understood. That is a trust feature: the
  * citizen can see their words were read correctly, and it demos beautifully.
+ *
+ * Layout: a left sidebar (nav) + a light content area with two parallel cards —
+ * one for the complaint text, one for the photo. All the submit/poll logic is
+ * unchanged; only the presentation moved.
  */
 import { useEffect, useRef, useState } from 'react';
 
+import Sidebar from '../components/Sidebar.jsx';
+import Topbar from '../components/Topbar.jsx';
+import MobileTopbar from '../components/MobileTopbar.jsx';
+import MobileNav from '../components/MobileNav.jsx';
 import { useLang } from '../i18n/index.jsx';
 import { getReport, postReport } from '../lib/api.js';
 
@@ -123,30 +131,28 @@ export default function ReportPage() {
     if (fileRef.current) fileRef.current.value = '';
   }
 
-  /* ------------------------------------------------ confirmation view */
-  if (reportId) {
+  const bn = lang === 'bn';
+
+  /* ---------------------------------------------- confirmation content */
+  function ConfirmView() {
     const g = result?.gemmaOutput;
     return (
-      <div className="citizen confirm">
+      <div className="report-confirm">
         <div className="tick">✓</div>
-        <h1 className={lang === 'bn' ? 'bn' : ''}>{t('thanks')}</h1>
+        <h1 className={bn ? 'bn' : ''}>{t('thanks')}</h1>
 
         {!g ? (
           <>
-            <div className="spinner" style={{ marginTop: 24 }} />
-            <p className={lang === 'bn' ? 'bn' : ''} style={{ margin: '0 0 4px' }}>
+            <div className="spinner" style={{ marginTop: 20 }} />
+            <p className={bn ? 'bn' : ''} style={{ margin: '0 0 4px' }}>
               {t('analysing')}
             </p>
-            <p style={{ color: 'var(--text-dim)', fontSize: 13, marginTop: 0 }}>
-              {t('analysingHint')}
-            </p>
+            <p className="confirm-sub">{t('analysingHint')}</p>
           </>
         ) : (
           <div className="understood">
             <h3>{t('understood')}</h3>
-            <p className="bn" style={{ margin: '0 0 12px', fontSize: 15, lineHeight: 1.6 }}>
-              {g.summary_bn}
-            </p>
+            <p className="bn understood-summary">{g.summary_bn}</p>
             <div className="kv">
               <span>{t('category')}</span>
               <span>{category(g.category)}</span>
@@ -171,60 +177,81 @@ export default function ReportPage() {
           </div>
         )}
 
-        <button className="btn" onClick={reset} style={{ marginTop: 8 }}>
+        <button className="report-submit" onClick={reset} style={{ marginTop: 8 }}>
           {t('newReport')}
         </button>
       </div>
     );
   }
 
-  /* ------------------------------------------------------- form view */
-  return (
-    <div className="citizen">
-      <h1 className="bn">{t('appName')}</h1>
-      <p className={`tagline ${lang === 'bn' ? 'bn' : ''}`}>{t('tagline')}</p>
-
-      <div className="status-line">
-        <span className={`dot ${geoState === 'ok' ? 'ok' : geoState === 'denied' ? 'bad' : ''}`} />
-        <span className={lang === 'bn' ? 'bn' : ''}>
-          {geoState === 'locating' && t('locating')}
-          {geoState === 'ok' && t('locationReady')}
-          {geoState === 'denied' && t('locationDenied')}
-        </span>
-      </div>
-
-      {error && <div className={`error-box ${lang === 'bn' ? 'bn' : ''}`}>{error}</div>}
-
-      <form onSubmit={onSubmit}>
-        <div className="field">
-          <label className={lang === 'bn' ? 'bn' : ''}>{t('describe')}</label>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t('placeholder')}
-            disabled={submitting}
-          />
+  /* -------------------------------------------------------- form content */
+  function FormView() {
+    return (
+      <>
+        <div className="report-head">
+          <h1 className="bn">{t('appName')}</h1>
+          <p className={`tagline ${bn ? 'bn' : ''}`}>{t('tagline')}</p>
         </div>
 
-        <div className="field">
-          <label className={lang === 'bn' ? 'bn' : ''}>{t('addPhoto')}</label>
-          <div className="photo-drop" onClick={() => fileRef.current?.click()}>
-            {preview ? <img src={preview} alt="" /> : <span>📷 {t('addPhoto')}</span>}
+        <div className="status-line">
+          <span className={`dot ${geoState === 'ok' ? 'ok' : geoState === 'denied' ? 'bad' : ''}`} />
+          <span className={bn ? 'bn' : ''}>
+            {geoState === 'locating' && t('locating')}
+            {geoState === 'ok' && t('locationReady')}
+            {geoState === 'denied' && t('locationDenied')}
+          </span>
+        </div>
+
+        {error && <div className={`error-box ${bn ? 'bn' : ''}`}>{error}</div>}
+
+        <form onSubmit={onSubmit}>
+          <div className="report-boxes">
+            <div className="report-box">
+              <label className={`box-label ${bn ? 'bn' : ''}`}>{t('describe')}</label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={t('placeholder')}
+                disabled={submitting}
+              />
+            </div>
+
+            <div className="report-box">
+              <label className={`box-label ${bn ? 'bn' : ''}`}>{t('addPhoto')}</label>
+              <div className="photo-drop" onClick={() => fileRef.current?.click()}>
+                {preview ? <img src={preview} alt="" /> : <span>📷 {t('addPhoto')}</span>}
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={onPickPhoto}
+                style={{ display: 'none' }}
+              />
+            </div>
           </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={onPickPhoto}
-            style={{ display: 'none' }}
-          />
-        </div>
 
-        <button className="btn" type="submit" disabled={submitting} style={{ width: '100%' }}>
-          {submitting ? t('submitting') : t('submit')}
-        </button>
-      </form>
+          <button className="report-submit" type="submit" disabled={submitting}>
+            {submitting ? t('submitting') : t('submit')}
+          </button>
+        </form>
+      </>
+    );
+  }
+
+  return (
+    <div className="report-shell">
+      <Sidebar />
+      <div className="report-main">
+        <MobileTopbar />
+        <Topbar />
+        {/* Called as functions (not <FormView/>) so they inline into this
+            component's tree — rendering them as elements would remount the
+            subtree each keystroke and steal focus from the textarea. */}
+        <div className="report-content">{reportId ? ConfirmView() : FormView()}</div>
+      </div>
+      <MobileNav />
     </div>
   );
 }
