@@ -1,16 +1,22 @@
 /**
- * The citizen-side sidebar.
+ * The left rail, in two variants.
  *
- * Crimson left rail with the brand mark up top and the primary navigation below.
- * The logo asset (images/logo.png) is white-on-transparent and carries the
- * "নাগরিক সেতু" wordmark, so it drops straight onto the crimson panel as-is.
+ * `citizen` (default) is the resident's app: report, my complaints, transparency.
+ * `admin` is the corporation console: work queue, transparency, and the signed-in
+ * jurisdiction with a way out.
+ *
+ * The variants exist mainly to keep the console off the citizen rail. A resident
+ * has no business in a municipal work queue, and a nav link that leads somewhere
+ * they cannot use is a nav link that makes the app feel broken.
  *
  * NavLink adds an `active` class automatically, which is what the white pill
  * highlight keys off; no manual "which page am I on" bookkeeping needed.
  */
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import { useLang } from '../i18n/index.jsx';
+import { useAdminSession } from '../lib/session.js';
+import { corpShort } from '../lib/corporations.js';
 import logo from '../images/logo.png';
 
 const stroke = {
@@ -58,25 +64,38 @@ function TransparencyIcon() {
   );
 }
 
-const ITEMS = [
-  { to: '/report', key: 'report', Icon: ReportIcon },
-  { to: '/dashboard', key: 'dashboard', Icon: DashboardIcon },
-  { to: '/my-complaints', key: 'myComplaints', Icon: ComplaintsIcon },
-  { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
-];
+const NAV = {
+  citizen: [
+    { to: '/report', key: 'report', Icon: ReportIcon },
+    { to: '/my-complaints', key: 'myComplaints', Icon: ComplaintsIcon },
+    { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
+  ],
+  admin: [
+    { to: '/admin', key: 'dashboard', Icon: DashboardIcon },
+    { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
+  ],
+};
 
-export default function Sidebar() {
-  const { t } = useLang();
+export default function Sidebar({ variant = 'citizen' }) {
+  const { t, lang } = useLang();
+  const { corporation, signOut } = useAdminSession();
+  const navigate = useNavigate();
+  const isAdmin = variant === 'admin';
 
   return (
     <aside className="sidebar">
-      <NavLink to="/report" className="sidebar-brand" aria-label="নাগরিক সেতু — Nagorik Setu">
+      <NavLink
+        to={isAdmin ? '/admin' : '/report'}
+        className="sidebar-brand"
+        aria-label="নাগরিক সেতু — Nagorik Setu"
+      >
         <img className="sidebar-logo" src={logo} alt="নাগরিক সেতু — Nagorik Setu" draggable="false" />
       </NavLink>
 
       <nav className="sidebar-nav">
-        {ITEMS.map(({ to, key, Icon }) => (
-          <NavLink key={key} to={to} className="sidebar-link">
+        {NAV[variant].map(({ to, key, Icon }) => (
+          // `end` keeps /admin from staying highlighted on nested admin routes.
+          <NavLink key={key} to={to} end className="sidebar-link">
             <span className="ico">
               <Icon />
             </span>
@@ -84,6 +103,25 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {isAdmin && corporation && (
+        <div className="sidebar-foot">
+          <span className="sidebar-corp">
+            <b>{corporation.abbr}</b>
+            <small>{corpShort(corporation, lang)}</small>
+          </span>
+          <button
+            type="button"
+            className="sidebar-signout"
+            onClick={() => {
+              signOut();
+              navigate('/admin/login');
+            }}
+          >
+            {t('signOut')}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

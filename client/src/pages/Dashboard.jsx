@@ -1,9 +1,14 @@
 /**
- * The ward councilor's console.
+ * The corporation console (admin side).
  *
  * Shows ISSUES, not reports — the deduplicated physical problems. The header
  * stat that matters most is the collapse ratio: N citizen reports became M
  * tickets. That single number is the product's whole argument.
+ *
+ * Scoped to the signed-in city corporation: an officer in Gazipur must not be
+ * looking at Dhaka South's workload. Scoping is geographic (lib/corporations.js)
+ * because a corporation *is* a jurisdiction, so a pin and its ticket can never
+ * disagree about which city they belong to.
  *
  * Layout: the crimson nav rail (left), a scrollable grid of square issue cards
  * (centre), and the Copilot chat (right). Live updates arrive over SSE, so a
@@ -11,7 +16,7 @@
  * and scrolls into view.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import Sidebar from '../components/Sidebar.jsx';
 import Topbar from '../components/Topbar.jsx';
@@ -22,6 +27,8 @@ import IssueDrawer from '../components/IssueDrawer.jsx';
 import CopilotChat from '../components/CopilotChat.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
+import { useAdminSession } from '../lib/session.js';
+import { corpName, containsPoint, filterIssues } from '../lib/corporations.js';
 
 function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
   const sla = issue.slaDueAt ? new Date(issue.slaDueAt) : null;
@@ -58,7 +65,8 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
 }
 
 export default function DashboardPage() {
-  const { setLang, category, t } = useLang();
+  const { setLang, category, t, lang } = useLang();
+  const { corporation } = useAdminSession();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -100,49 +108,64 @@ export default function DashboardPage() {
       const incoming = payload?.issue;
       if (!incoming?._id) return;
 
+      // Keep every issue in state regardless of jurisdiction — switching
+      // corporation then re-filters instantly instead of refetching.
       setIssues((prev) => {
         const idx = prev.findIndex((i) => i._id === incoming._id);
         const next = idx === -1 ? [incoming, ...prev] : prev.map((i, k) => (k === idx ? incoming : i));
         return [...next].sort((a, b) => (b.priorityWeight ?? 0) - (a.priorityWeight ?? 0));
       });
+
+      // ...but only announce it if it landed in the console we're looking at.
+      // Flashing a card an officer cannot see would be worse than silence.
+      if (!containsPoint(corporation, incoming?.centroid?.coordinates)) return;
       setFlashId(incoming._id);
       // Scrolling the new card into view makes the update legible on camera.
       requestAnimationFrame(() => queueRef.current?.scrollTo({ top: 0, behavior: 'smooth' }));
       setTimeout(() => setFlashId((f) => (f === incoming._id ? null : f)), 2600);
     }, setLive);
     return unsub;
-  }, []);
+  }, [corporation]);
+
+  /* ---- jurisdiction scoping ---- */
+  const { inside: scoped, unassigned } = useMemo(
+    () => filterIssues(issues, corporation),
+    [issues, corporation],
+  );
 
   const visible = useMemo(
-    () => (highlightIds ? issues.filter((i) => highlightIds.includes(String(i._id))) : issues),
-    [issues, highlightIds],
+    () => (highlightIds ? scoped.filter((i) => highlightIds.includes(String(i._id))) : scoped),
+    [scoped, highlightIds],
   );
 
   const stats = useMemo(() => {
-    const reports = issues.reduce((n, i) => n + (i.reportCount || 1), 0);
+    const reports = scoped.reduce((n, i) => n + (i.reportCount || 1), 0);
     return {
-      issues: issues.length,
+      issues: scoped.length,
       reports,
-      collapsed: reports - issues.length,
-      urgent: issues.filter((i) => i.severity >= 4).length,
+      collapsed: reports - scoped.length,
+      urgent: scoped.filter((i) => i.severity >= 4).length,
     };
-  }, [issues]);
+  }, [scoped]);
 
-  const selected = issues.find((i) => i._id === selectedId) || null;
+  const selected = scoped.find((i) => i._id === selectedId) || null;
+
+  // Guard after every hook — React forbids an early return that skips them.
+  if (!corporation) return <Navigate to="/admin/login" replace />;
 
   return (
     <div className="dash2">
-      <Sidebar />
+      <Sidebar variant="admin" />
 
       <main className="dash2-main">
         <MobileTopbar />
         <Topbar />
 
-        <Link to="/report" className="d2-newreport">+ {t('newReportBtn')}</Link>
-
         <div className="dash2-head">
           <div className="dash2-titles">
-            <h2>Work queue — Gazipur City Corporation</h2>
+            <h2>
+              {t('workQueue')} — {corpName(corporation, lang)}
+            </h2>
             <p>
               Ranked by priority ·{' '}
               <span className={`live-badge${live ? ' on' : ''}`}>
@@ -202,7 +225,9 @@ export default function DashboardPage() {
           <div className="d2-cards no-scrollbar" ref={queueRef}>
             {loading && <div className="d2-empty">Loading issues…</div>}
             {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
-            {!loading && !error && visible.length === 0 && <div className="d2-empty">No issues match.</div>}
+            {!loading && !error && visible.length === 0 && (
+              <div className="d2-empty">{highlightIds ? 'No issues match.' : t('noIssuesHere')}</div>
+            )}
             {visible.map((issue) => (
               <IssueCard
                 key={issue._id}
@@ -216,8 +241,23 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="d2-map">
-            <MapView issues={visible} selectedId={selectedId} flashId={flashId} onSelect={setSelectedId} />
+            <MapView
+              issues={visible}
+              selectedId={selectedId}
+              flashId={flashId}
+              onSelect={setSelectedId}
+              center={corporation.center}
+              zoom={corporation.zoom}
+            />
           </div>
+        )}
+
+        {/* Say out loud when reports fall outside every boundary we know, rather
+            than quietly under-reporting the city's workload. */}
+        {unassigned.length > 0 && (
+          <p className="d2-unassigned">
+            ⚠ {unassigned.length} {t('unassignedNote')}
+          </p>
         )}
       </main>
 
@@ -229,7 +269,7 @@ export default function DashboardPage() {
         {selected && <IssueDrawer issue={selected} onClose={() => setSelectedId(null)} />}
       </aside>
 
-      <MobileNav />
+      <MobileNav variant="admin" />
     </div>
   );
 }

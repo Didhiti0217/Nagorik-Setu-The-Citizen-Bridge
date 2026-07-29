@@ -1,37 +1,36 @@
 /**
- * The front door.
+ * The front door — now a fork, because the app has two audiences.
  *
- * A full-bleed crimson splash with the Nagorik Setu mark. It exists to do one
- * thing for a resident who is walking past a problem or standing in one: give
- * them a single, unmissable target that drops them straight into reporting. The
- * whole screen is the button.
+ * A resident walking past a problem still gets a single unmissable target: the
+ * citizen panel fills most of the screen and drops straight into reporting. The
+ * admin door is deliberately smaller and quieter — far fewer people need it, and
+ * a resident must never feel they have to pick correctly to report a broken thing.
  *
- * The logo asset is white-on-transparent (and carries the Bangla wordmark), so
- * it sits directly on the brand crimson field with no processing — crisp at any
- * size because the 1024px source is only ever downscaled.
+ * The logo asset is white-on-transparent (and carries the Bangla wordmark), so it
+ * sits directly on the brand crimson field with no processing.
  */
 import { useNavigate } from 'react-router-dom';
 
+import { useLang } from '../i18n/index.jsx';
 import logo from '../images/logo.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const go = () => navigate('/report');
+  const { t, lang } = useLang();
+  const bn = lang === 'bn';
+
+  const key = (fn) => (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fn();
+    }
+  };
+
+  const toReport = () => navigate('/report');
+  const toAdmin = () => navigate('/admin/login');
 
   return (
-    <div
-      className="landing"
-      role="button"
-      tabIndex={0}
-      aria-label="নাগরিক সেতু — রিপোর্ট করতে ট্যাপ করুন · Nagorik Setu — tap to report"
-      onClick={go}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          go();
-        }
-      }}
-    >
+    <div className="landing">
       <img
         className="landing-art"
         src={logo}
@@ -39,9 +38,30 @@ export default function LandingPage() {
         draggable="false"
       />
 
-      <div className="landing-hint">
-        <span className="bn">রিপোর্ট করতে যেকোনো জায়গায় ট্যাপ করুন</span>
-        <span className="en">Tap anywhere to report</span>
+      <div className="landing-doors">
+        <div
+          className="door door-citizen"
+          role="button"
+          tabIndex={0}
+          onClick={toReport}
+          onKeyDown={key(toReport)}
+        >
+          <span className="door-glyph" aria-hidden="true">📣</span>
+          <b className={bn ? 'bn' : ''}>{t('citizenDoor')}</b>
+          <small className={bn ? 'bn' : ''}>{t('citizenDoorHint')}</small>
+        </div>
+
+        <div
+          className="door door-admin"
+          role="button"
+          tabIndex={0}
+          onClick={toAdmin}
+          onKeyDown={key(toAdmin)}
+        >
+          <span className="door-glyph" aria-hidden="true">🏛️</span>
+          <b className={bn ? 'bn' : ''}>{t('adminDoor')}</b>
+          <small className={bn ? 'bn' : ''}>{t('adminDoorHint')}</small>
+        </div>
       </div>
     </div>
   );

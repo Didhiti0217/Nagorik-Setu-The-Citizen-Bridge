@@ -1,12 +1,13 @@
 /**
  * Phone-only bottom tab bar (replaces the left rail on small screens).
  *
- * Items: Dashboard, Notification, Transparency, Chat.
- *  - Dashboard / Transparency are routes (NavLink adds `.active`).
+ * Mirrors Sidebar's two variants so the citizen app and the corporation console
+ * stay separated on phones too.
+ *  - Routes use NavLink (which adds `.active`).
  *  - Notification opens a small self-contained sheet — there is no notifications
  *    backend and CLAUDE.md forbids faking one, so it shows an honest empty state.
- *  - Chat routes to the dashboard and asks it to open the Copilot overlay via
- *    router state (Dashboard reads location.state.openChat).
+ *  - Chat (admin only) routes to the console and asks it to open the Copilot
+ *    overlay via router state (Dashboard reads location.state.openChat).
  */
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -49,18 +50,45 @@ function ChatIcon() {
   );
 }
 
-export default function MobileNav() {
+function ReportIcon() {
+  return (
+    <svg viewBox="0 0 24 24" {...stroke}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+function ComplaintsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" {...stroke}>
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 4h6v2H9z" />
+      <path d="M9 11h6M9 15h4" />
+    </svg>
+  );
+}
+
+export default function MobileNav({ variant = 'citizen' }) {
   const { t } = useLang();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const isAdmin = variant === 'admin';
 
   return (
     <>
       <nav className="mobile-nav">
-        <NavLink to="/dashboard" className="mnav-item">
-          <DashIcon />
-          <span>{t('dashboard')}</span>
-        </NavLink>
+        {isAdmin ? (
+          <NavLink to="/admin" end className="mnav-item">
+            <DashIcon />
+            <span>{t('dashboard')}</span>
+          </NavLink>
+        ) : (
+          <NavLink to="/report" className="mnav-item">
+            <ReportIcon />
+            <span>{t('report')}</span>
+          </NavLink>
+        )}
         <button type="button" className="mnav-item" onClick={() => setNotifOpen(true)}>
           <BellIcon />
           <span>{t('notifications')}</span>
@@ -69,14 +97,21 @@ export default function MobileNav() {
           <EyeIcon />
           <span>{t('transparency')}</span>
         </NavLink>
-        <button
-          type="button"
-          className="mnav-item"
-          onClick={() => navigate('/dashboard', { state: { openChat: Date.now() } })}
-        >
-          <ChatIcon />
-          <span>{t('chat')}</span>
-        </button>
+        {isAdmin ? (
+          <button
+            type="button"
+            className="mnav-item"
+            onClick={() => navigate('/admin', { state: { openChat: Date.now() } })}
+          >
+            <ChatIcon />
+            <span>{t('chat')}</span>
+          </button>
+        ) : (
+          <NavLink to="/my-complaints" className="mnav-item">
+            <ComplaintsIcon />
+            <span>{t('myComplaints')}</span>
+          </NavLink>
+        )}
       </nav>
 
       {notifOpen && (

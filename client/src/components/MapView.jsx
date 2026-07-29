@@ -58,7 +58,7 @@ const SEVERITY_COLOUR = [
   '#6b7787',
 ];
 
-export default function MapView({ issues, selectedId, onSelect, flashId }) {
+export default function MapView({ issues, selectedId, onSelect, flashId, center, zoom }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const readyRef = useRef(false);
@@ -72,8 +72,8 @@ export default function MapView({ issues, selectedId, onSelect, flashId }) {
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: STYLE,
-      center: CENTER,
-      zoom: ZOOM,
+      center: center ?? CENTER,
+      zoom: zoom ?? ZOOM,
       attributionControl: { compact: true },
     });
     mapRef.current = map;
@@ -182,6 +182,19 @@ export default function MapView({ issues, selectedId, onSelect, flashId }) {
       map.setFeatureState({ source: 'issues', id: i._id }, { selected: i._id === selectedId });
     }
   }, [selectedId, issues]);
+
+  /* ---- follow the signed-in corporation ----
+     The map is only constructed once, so a jurisdiction change has to move it
+     explicitly or an officer who switches corporation keeps staring at the
+     previous city. Keyed on the joined coordinates because a fresh array
+     literal every render would re-fire this on any parent update. */
+  const centerKey = center ? center.join(',') : '';
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !center) return;
+    map.flyTo({ center, zoom: zoom ?? ZOOM, speed: 1.2 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerKey, zoom]);
 
   /* ---- fly to a newly arrived issue: the live pin-drop demo shot ---- */
   useEffect(() => {

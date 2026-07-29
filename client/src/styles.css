@@ -118,51 +118,202 @@ a { color: var(--brand-bright); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
+  padding: 24px;
   animation: landing-fade 500ms ease-out both;
-}
-.landing:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.75);
-  outline-offset: -8px;
 }
 
 .landing-art {
   /* Transparent white logo, so no feather/mask needed — it sits straight on the
-     crimson field. Sized up a touch since the 1024px source has generous padding
-     around the mark; still only ever downscaled, so it stays crisp. */
-  width: min(92vmin, 640px);
+     crimson field. Slightly smaller than when it was the whole screen, to leave
+     the doors room without pushing them off a short phone viewport. */
+  width: min(74vmin, 460px);
   height: auto;
   display: block;
   animation: landing-pop 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
-.landing-hint {
-  position: absolute;
-  bottom: max(26px, 6vh);
+/* The two doors. Deliberately unequal: the citizen panel is the bright, wide,
+   obvious one and the admin panel is quiet and outlined. Far more residents than
+   officers will land here, and a resident must never have to think about which
+   one is theirs. */
+.landing-doors {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 28px;
+  width: 100%;
+  max-width: 620px;
+  animation: landing-fade 700ms 200ms ease-out both;
+}
+
+.door {
+  flex: 1 1 220px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  padding: 20px 18px;
+  border-radius: 14px;
+  cursor: pointer;
   text-align: center;
-  color: #fff;
-  animation: hint-pulse 2.4s ease-in-out infinite;
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
-.landing-hint .bn { font-family: var(--font-bn); font-size: 15px; font-weight: 500; }
-.landing-hint .en { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.75; }
+.door:hover { transform: translateY(-2px); }
+.door:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+.door b { font-size: 17px; font-weight: 650; }
+.door small { font-size: 12px; opacity: 0.8; }
+.door-glyph { font-size: 26px; line-height: 1; margin-bottom: 2px; }
+
+.door-citizen {
+  flex-basis: 300px;
+  background: #fff;
+  color: #b3153c;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+.door-citizen:hover { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3); }
+
+.door-admin {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+.door-admin:hover { background: rgba(255, 255, 255, 0.18); }
 
 @keyframes landing-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes landing-pop {
   from { opacity: 0; transform: scale(0.94); }
   to { opacity: 1; transform: none; }
 }
-@keyframes hint-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing, .landing-art, .landing-hint { animation: none; }
+  .landing, .landing-art, .landing-doors { animation: none; }
+  .door:hover { transform: none; }
 }
+
+/* ------------------------------------------------- admin sign-in */
+.adminlogin {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background: radial-gradient(1100px 500px at 50% -10%, #2a1420 0%, var(--bg) 62%);
+}
+.adminlogin-lang {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 7px 13px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.adminlogin-lang:hover { color: var(--text); }
+
+.adminlogin-card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 30px 26px 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.adminlogin-logo {
+  width: 132px;
+  height: auto;
+  /* The mark is white-on-transparent, drawn for the crimson field — a touch of
+     brightness keeps it from muddying against the dark card. */
+  filter: brightness(1.08);
+}
+.adminlogin-card h1 { margin: 12px 0 4px; font-size: 21px; font-weight: 650; }
+.adminlogin-sub { margin: 0 0 18px; color: var(--text-dim); font-size: 13.5px; text-align: center; }
+
+.adminlogin-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+
+.corp-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.corp-option:hover { border-color: #46536a; }
+.corp-option.picked { border-color: var(--brand-bright); background: #16241f; }
+
+.corp-abbr {
+  flex: 0 0 auto;
+  min-width: 46px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: #0e1620;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.corp-option.picked .corp-abbr { color: var(--brand-bright); border-color: var(--brand); }
+
+.corp-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.corp-names b { font-size: 14px; font-weight: 600; }
+.corp-names small { font-size: 11.5px; color: var(--text-dim); }
+
+.corp-tick { margin-left: auto; color: var(--brand-bright); opacity: 0; font-weight: 700; }
+.corp-option.picked .corp-tick { opacity: 1; }
+
+.adminlogin-hint { margin: 14px 0 0; font-size: 12px; color: var(--text-dim); text-align: center; }
+
+.adminlogin-submit {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.adminlogin-submit:hover:not(:disabled) { background: var(--brand-bright); }
+.adminlogin-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.adminlogin-demo { margin: 12px 0 0; font-size: 11.5px; color: var(--text-dim); text-align: center; }
+.adminlogin-back {
+  margin-top: 14px;
+  background: none;
+  border: 0;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.adminlogin-back:hover { color: var(--text); }
 
 /* ------------------------------------------------------------ citizen */
 .citizen {
@@ -467,6 +618,31 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .sidebar-link.active { background: rgba(255, 255, 255, 0.20); color: #fff; font-weight: 600; }
 .sidebar-link .ico { display: grid; place-items: center; width: 22px; height: 22px; flex: none; }
 .sidebar-link .ico svg { width: 20px; height: 20px; }
+
+/* ---- admin rail footer: which corporation am I in, and the way out ---- */
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sidebar-corp { display: flex; flex-direction: column; gap: 1px; padding: 0 4px; color: #fff; }
+.sidebar-corp b { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; }
+.sidebar-corp small { font-size: 12px; opacity: 0.82; }
+.sidebar-signout {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  text-align: left;
+}
+.sidebar-signout:hover { background: rgba(255, 255, 255, 0.24); }
 
 /* ---- top bar ---- */
 .report-main { display: flex; flex-direction: column; min-width: 0; }
@@ -824,6 +1000,18 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .d2-sla.overdue { color: var(--sev-5); font-weight: 600; }
 
 .d2-empty { grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--ink-dim); font-size: 14px; }
+
+/* Reports whose coordinates fall outside every corporation boundary. Stated
+   plainly so the console never quietly under-reports the city's workload. */
+.d2-unassigned {
+  margin: 10px 0 0;
+  padding: 9px 13px;
+  border-radius: 9px;
+  background: #fdf3e5;
+  border: 1px solid #e9d2ae;
+  color: #7a5418;
+  font-size: 12.5px;
+}
 
 /* ---- right column (chat + drawer share it) ---- */
 .dash2-aside { position: relative; min-width: 0; }

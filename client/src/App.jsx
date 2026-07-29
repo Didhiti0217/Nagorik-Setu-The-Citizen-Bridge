@@ -4,6 +4,7 @@ import { LangProvider, useLang } from './i18n/index.jsx';
 import LandingPage from './pages/Landing.jsx';
 import ReportPage from './pages/Report.jsx';
 import MyComplaintsPage from './pages/MyComplaints.jsx';
+import AdminLoginPage from './pages/AdminLogin.jsx';
 import DashboardPage from './pages/Dashboard.jsx';
 import TransparencyPage from './pages/Transparency.jsx';
 
@@ -16,7 +17,7 @@ function Nav() {
         <small>Nagorik Setu</small>
       </div>
       <NavLink to="/report">{t('report')}</NavLink>
-      <NavLink to="/dashboard">{t('dashboard')}</NavLink>
+      <NavLink to="/admin">{t('dashboard')}</NavLink>
       <NavLink to="/transparency">{t('transparency')}</NavLink>
       <div className="spacer" />
       <button className="btn ghost" onClick={toggle} title="Switch language">
@@ -42,13 +43,21 @@ export default function App() {
     // flips itself to English on mount (see Dashboard.jsx).
     <LangProvider initial="bn">
       <Routes>
-        {/* Full-bleed splash, no nav — the whole screen taps through to /report. */}
+        {/* Full-bleed splash that forks: citizen → /report, admin → /admin/login. */}
         <Route path="/" element={<LandingPage />} />
-        {/* Citizen pages carry their own sidebar (see Sidebar.jsx), so they sit
-            outside the top-nav layout. */}
+
+        {/* Citizen app. These pages carry their own sidebar (see Sidebar.jsx),
+            so they sit outside the top-nav layout. */}
         <Route path="/report" element={<ReportPage />} />
         <Route path="/my-complaints" element={<MyComplaintsPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+
+        {/* Corporation console. /admin redirects to the picker when no
+            corporation is selected (see Dashboard.jsx). */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<DashboardPage />} />
+        {/* The console used to live here; keep the old link working. */}
+        <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
+
         <Route element={<AppLayout />}>
           <Route path="/transparency" element={<TransparencyPage />} />
         </Route>
