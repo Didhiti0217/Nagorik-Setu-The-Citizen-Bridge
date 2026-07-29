@@ -18,6 +18,7 @@ import { activeConfig } from './gemma/index.js';
 
 import { notFound, errorHandler } from './middleware/errors.js';
 
+import { authRouter } from './routes/auth.js';
 import { reportsRouter } from './routes/reports.js';
 import { issuesRouter } from './routes/issues.js';
 import { streamRouter } from './routes/stream.js';
@@ -61,6 +62,7 @@ export function createApp({ processReport }) {
     });
   });
 
+  app.use('/api/auth', authRouter());
   app.use('/api/reports', reportsRouter({ processReport, uploadsDir }));
   app.use('/api/issues', issuesRouter());
   app.use('/api/stream', streamRouter());
