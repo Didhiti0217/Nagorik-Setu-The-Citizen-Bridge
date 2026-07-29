@@ -23,6 +23,10 @@ const ReportSchema = new Schema({
     coordinates: { type: [Number], required: true },
   },
   areaHint: { type: String, default: null },
+  // Who filed it. Null on every report seeded before authentication existed —
+  // those genuinely belong to nobody, so they stay out of any citizen's "my
+  // complaints" and remain readable only by the console. No backfill.
+  submittedBy: { type: Schema.Types.ObjectId, ref: 'Citizen', default: null, index: true },
   // received -> processing -> triaged|manual_review -> linked | failed
   status: { type: String, default: 'received' },
   gemmaOutput: { type: Schema.Types.Mixed, default: null },

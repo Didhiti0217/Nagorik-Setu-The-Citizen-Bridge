@@ -10,6 +10,10 @@
  * good enough to route a pin to the right console, not a cadastral boundary.
  * Tongi (23.89 N) sits on the real Dhaka/Gazipur line and is deliberately inside
  * Gazipur here, because the seed corpus treats it as Gazipur.
+ *
+ * The ids below are mirrored in server/src/lib/corporations.js, which validates
+ * that an admin account can only ever carry a jurisdiction this file can
+ * resolve. If you add a corporation, edit BOTH files.
  */
 
 export const CORPORATIONS = [
