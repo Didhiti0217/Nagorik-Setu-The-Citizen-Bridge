@@ -16,6 +16,8 @@ import cors from 'cors';
 import { dbState } from './lib/db.js';
 import { activeConfig } from './gemma/index.js';
 
+import { notFound, errorHandler } from './middleware/errors.js';
+
 import { reportsRouter } from './routes/reports.js';
 import { issuesRouter } from './routes/issues.js';
 import { streamRouter } from './routes/stream.js';
@@ -26,6 +28,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp({ processReport }) {
   const app = express();
+
+  // Render terminates TLS at a proxy, so without this every request reports the
+  // proxy's address as req.ip — and the per-IP rate limiters would throttle the
+  // entire internet as if it were one client.
+  app.set('trust proxy', 1);
 
   // CLIENT_ORIGIN="*" must be passed to cors() as the STRING '*', never as
   // ['*']. Given an array, cors treats it as a whitelist of exact origins, so
@@ -60,7 +67,8 @@ export function createApp({ processReport }) {
   app.use('/api/transparency', transparencyRouter());
   app.use('/api/copilot', copilotRouter());
 
-  app.use((req, res) => res.status(404).json({ error: 'not found' }));
+  app.use(notFound);
+  app.use(errorHandler);
 
   return app;
 }
