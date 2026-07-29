@@ -27,6 +27,38 @@ services:
         sync: false
       - key: MONGODB_URI
         sync: false
+      # HS256 session-signing secret. Must be >= 32 chars or the server refuses
+      # to boot. Generate with: openssl rand -base64 48
+      - key: JWT_SECRET
+        sync: false
+      # Optional: fixed passwords for `npm run seed:admins`. Leave unset and the
+      # script generates one and prints it once.
+      - key: ADMIN_SEED_PASSWORD
+        sync: false
       # Lock this down to your deployed frontend origin before submission.
       - key: CLIENT_ORIGIN
         value: "*"
+      # CLIENT_ORIGIN can be a wildcard; this one cannot — it builds invite links.
+      - key: PUBLIC_APP_URL
+        value: https://nagorik-setu.vercel.app
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Judges must be able to sign in without a Bangladeshi SIM: the OTP comes
+      # back in the API response and is shown on screen. Only ever safe while
+      # OTP_SENDER is "demo" — the server enforces that pairing at boot.
+      - key: AUTH_DEMO_MODE
+        value: "true"
+      - key: OTP_SENDER
+        value: demo
+      - key: OTP_TTL_SECONDS
+        value: "300"
+      - key: OTP_MAX_ATTEMPTS
+        value: "5"
+      - key: OTP_RESEND_COOLDOWN_SECONDS
+        value: "60"
+      - key: INVITE_TTL_HOURS
+        value: "72"
+      - key: STREAM_TICKET_TTL_SECONDS
+        value: "900"
+      - key: ADMIN_SEED
+        value: gazipur:gcc@nagoriksetu.demo;dhaka-north:dncc@nagoriksetu.demo

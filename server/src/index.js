@@ -8,6 +8,7 @@
  */
 import 'dotenv/config';
 
+import { assertAuthConfig } from './lib/authConfig.js';
 import { connectDb } from './lib/db.js';
 import { createStore } from './lib/store.js';
 import { publish } from './lib/events.js';
@@ -17,6 +18,13 @@ import { GemmaCall } from './models/GemmaCall.js';
 import { createApp } from './app.js';
 
 async function main() {
+  // Before anything else: an unsafe auth environment must stop the boot, not
+  // produce a warning in a log nobody reads (lib/authConfig.js explains both).
+  const auth = assertAuthConfig();
+  if (auth.demoMode) {
+    console.log('[auth] DEMO MODE — OTPs are returned in the API response and shown on screen.');
+  }
+
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nagorik-setu';
   await connectDb(uri);
   console.log(`[db] connected: ${uri.replace(/\/\/[^@]*@/, '//***@')}`);
