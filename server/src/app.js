@@ -48,10 +48,17 @@ export function createApp({ processReport }) {
 
   // Evidence photos, served for the dashboard. Ephemeral on most hosts — fine
   // for a demo, and the DB does not depend on them existing.
+  //
+  // Left public, knowingly. Filenames are random UUIDs and there is no directory
+  // listing, so a photo is unguessable, but anyone holding a URL can fetch it.
+  // Closing this properly needs signed URLs or a streaming proxy route; it is
+  // recorded as an accepted risk rather than half-solved.
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   fs.mkdirSync(uploadsDir, { recursive: true });
   app.use('/uploads', express.static(uploadsDir));
 
+  // Public, and it must stay that way: render.yaml points healthCheckPath here,
+  // so guarding it would make Render consider every deploy unhealthy.
   app.get('/api/health', (req, res) => {
     res.json({
       ok: true,

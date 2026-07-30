@@ -5,6 +5,12 @@
  * demo?" — with stage, modalities, latency and the actual model output for
  * every call (plan.md §5). Also the source of the benchmark table's latency
  * numbers. ~45 minutes of work for points that are otherwise hard to earn.
+ *
+ * DELIBERATELY PUBLIC — do not add a guard here. Reporting now requires a
+ * sign-in, and this page (with /api/health) is what keeps the promise that the
+ * demo is inspectable without an account: a judge who never logs in can still
+ * watch real Gemma calls, their latencies and their raw output. Locking it down
+ * would remove the only evidence-of-realness reachable from outside the app.
  */
 import { Router } from 'express';
 

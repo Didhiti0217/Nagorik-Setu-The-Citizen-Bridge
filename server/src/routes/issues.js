@@ -5,9 +5,17 @@
  *
  * Read-only. Filters (status, category, min_severity) are typed and clamped so
  * the dashboard can slice the map without any free-form query reaching Mongo.
+ *
+ * Console-only. An issue aggregates citizens' free text and precise locations
+ * into a municipal work queue; that is not public data. Jurisdiction filtering
+ * stays where it already is — client-side and geographic, by whether an issue's
+ * centroid falls inside the corporation's bounds (client/src/lib/corporations.js)
+ * — so there is still no `corporation` column and no chance of a report and its
+ * own map pin disagreeing about which city they are in.
  */
 import { Router } from 'express';
 
+import { requireAuth, requireRole } from '../middleware/auth.js';
 import { Issue } from '../models/Issue.js';
 
 function toFeature(issue) {
@@ -22,7 +30,7 @@ function toFeature(issue) {
 export function issuesRouter() {
   const router = Router();
 
-  router.get('/', async (req, res) => {
+  router.get('/', requireAuth, requireRole('admin'), async (req, res) => {
     try {
       const filter = {};
       if (req.query.status) filter.status = req.query.status.toString();
@@ -42,7 +50,7 @@ export function issuesRouter() {
     }
   });
 
-  router.get('/:id', async (req, res) => {
+  router.get('/:id', requireAuth, requireRole('admin'), async (req, res) => {
     try {
       const doc = await Issue.findById(req.params.id).lean();
       if (!doc) return res.status(404).json({ error: 'not found' });

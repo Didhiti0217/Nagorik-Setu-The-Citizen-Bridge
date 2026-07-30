@@ -34,6 +34,12 @@ export function errorHandler(err, req, res, next) {
     console.error('[api] unhandled:', err);
   }
 
+  // Any 429 carries the wait in the header too, not just the body. It is the
+  // standard clients and proxies already understand, and it belongs here rather
+  // than in the rate limiter because the OTP resend cooldown is thrown by
+  // services/auth.js and never passes through that middleware.
+  if (err?.retryAfterSec) res.set('Retry-After', String(err.retryAfterSec));
+
   // A 500's message is ours, not the caller's — it can carry a Mongo error, a
   // connection string fragment, or a stack frame.
   return res.status(status).json({

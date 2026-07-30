@@ -60,7 +60,8 @@ export function rateLimit({ windowMs, max, key = (req) => req.ip, message, scope
     entry.count += 1;
     if (entry.count > max) {
       const retryAfterSec = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
-      res.set('Retry-After', String(retryAfterSec));
+      // The Retry-After header is set centrally in middleware/errors.js, off
+      // err.retryAfterSec, so it is identical however a 429 is raised.
       const err = new Error(message || 'too many requests, please wait');
       err.status = 429;
       err.retryAfterSec = retryAfterSec;
