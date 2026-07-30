@@ -84,9 +84,13 @@ export default function Sidebar({ variant = 'citizen' }) {
 
   // Sign-out is awaited so the redirect happens after the session is cleared —
   // navigating first would race the guard and could bounce back into the app.
+  //
+  // `replace` drops the page being left behind instead of stacking the login screen
+  // on top of it. Require would bounce a Back press off it anyway; this makes the
+  // history correct by construction rather than by rebound.
   const leave = async (to) => {
     await signOut();
-    navigate(to);
+    navigate(to, { replace: true });
   };
 
   return (

@@ -40,6 +40,10 @@ function AppLayout() {
   );
 }
 
+// Where each role belongs when it is somewhere it has no business being. Shared by
+// both guards below so "home" cannot drift between them.
+const homeFor = (session) => (session.isAdmin ? '/admin' : '/report');
+
 /**
  * The client-side half of authorization — a redirect, not a defence.
  *
@@ -61,9 +65,28 @@ function Require({ role, children }) {
   }
   // Signed in as the wrong role. Sending an admin to the citizen sign-in would
   // ask them to sign out first, which is confusing; send each role home instead.
-  if (session.role !== role) {
-    return <Navigate to={session.isAdmin ? '/admin' : '/report'} replace />;
-  }
+  if (session.role !== role) return <Navigate to={homeFor(session)} replace />;
+
+  return children;
+}
+
+/**
+ * The mirror of Require: a page whose only purpose is to get you in, which someone
+ * already signed in should never see — by typing the URL, and above all by pressing
+ * Back onto it.
+ *
+ * `replace` is the load-bearing part. Signing in leaves a history stack of
+ * [/, /report], so Back re-enters `/`; replacing that entry with the home route
+ * means the stack becomes [/report, /report] and a second Back press stays put
+ * instead of ping-ponging. Without `replace` the splash would come back every time.
+ *
+ * Every role is bounced from every entry page, so switching between the resident app
+ * and the console means signing out first — one click in the sidebar, which lands on
+ * a login page whose "back to the citizen app" link shows the splash again.
+ */
+function RedirectIfSignedIn({ children }) {
+  const { session } = useSession();
+  if (session) return <Navigate to={homeFor(session)} replace />;
   return children;
 }
 
@@ -73,12 +96,28 @@ export default function App() {
     // flips itself to English on mount (see Dashboard.jsx).
     <LangProvider initial="bn">
       <Routes>
-        {/* Full-bleed splash that forks: citizen → /report, admin → /admin/login. */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Full-bleed splash that forks: citizen → /report, admin → /admin/login.
+            The doors deliberately PUSH, so an anonymous visitor on a login screen can
+            still press Back to the splash — the one Back that should succeed. */}
+        <Route
+          path="/"
+          element={
+            <RedirectIfSignedIn>
+              <LandingPage />
+            </RedirectIfSignedIn>
+          }
+        />
 
         {/* Citizen app. These pages carry their own sidebar (see Sidebar.jsx),
             so they sit outside the top-nav layout. */}
-        <Route path="/login" element={<SignInPage />} />
+        <Route
+          path="/login"
+          element={
+            <RedirectIfSignedIn>
+              <SignInPage />
+            </RedirectIfSignedIn>
+          }
+        />
         <Route
           path="/report"
           element={
@@ -97,8 +136,18 @@ export default function App() {
         />
 
         {/* Corporation console. */}
-        <Route path="/admin/login" element={<AdminLoginPage />} />
-        {/* Public by necessity — whoever follows an invitation has no account yet. */}
+        <Route
+          path="/admin/login"
+          element={
+            <RedirectIfSignedIn>
+              <AdminLoginPage />
+            </RedirectIfSignedIn>
+          }
+        />
+        {/* Public by necessity — whoever follows an invitation has no account yet, and
+            NOT wrapped above: the point of this page is provisioning an account for
+            someone who may well be signed in as somebody else. Accepting navigates
+            with replace, so a consumed token is not left behind in history. */}
         <Route path="/admin/invite/:token" element={<InviteAcceptPage />} />
         <Route
           path="/admin"

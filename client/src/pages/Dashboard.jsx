@@ -16,7 +16,7 @@
  * and scrolls into view.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import Sidebar from '../components/Sidebar.jsx';
 import Topbar from '../components/Topbar.jsx';
@@ -67,7 +67,7 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
 export default function DashboardPage() {
   const { setLang, category, t, lang } = useLang();
   // The jurisdiction comes from the signed-in account's token, not from a picker.
-  const { corporation } = useSession();
+  const { corporation, user, signOut } = useSession();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,6 +79,14 @@ export default function DashboardPage() {
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const queueRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Only reachable from the unknown-jurisdiction state below. Awaited, so the guard
+  // sees a cleared session and lets /admin/login render instead of bouncing back.
+  const leaveConsole = useCallback(async () => {
+    await signOut();
+    navigate('/admin/login', { replace: true });
+  }, [signOut, navigate]);
 
   // The mobile bottom-nav Chat button routes here with this state to pop the chat.
   useEffect(() => {
@@ -151,8 +159,32 @@ export default function DashboardPage() {
 
   const selected = scoped.find((i) => i._id === selectedId) || null;
 
-  // Guard after every hook — React forbids an early return that skips them.
-  if (!corporation) return <Navigate to="/admin/login" replace />;
+  // After every hook — React forbids an early return that skips them.
+  //
+  // An admin whose account carries a jurisdiction this build cannot resolve. The
+  // server's `enum: CORPORATION_IDS` makes it nearly impossible, but this must NOT
+  // redirect to /admin/login: that page now bounces signed-in admins back here, so a
+  // redirect would be an infinite loop and a white screen. Say what is wrong and
+  // offer the one action that fixes it.
+  if (!corporation) {
+    return (
+      <div className="dash2">
+        <Sidebar variant="admin" />
+        <main className="dash2-main">
+          <div className="d2-empty">
+            This account is assigned to <b>{user?.corporation || 'no corporation'}</b>, which
+            this build does not know about.
+            <br />
+            Sign in with an account whose jurisdiction is one of the five city corporations.
+            <br />
+            <button type="button" className="report-submit" onClick={leaveConsole}>
+              {t('signOut')}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dash2">
