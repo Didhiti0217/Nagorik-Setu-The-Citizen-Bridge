@@ -314,6 +314,71 @@ a { color: var(--brand-bright); }
   cursor: pointer;
 }
 .adminlogin-back:hover { color: var(--text); }
+.adminlogin-back:disabled { opacity: 0.5; cursor: default; }
+a.adminlogin-back { text-decoration: none; text-align: center; }
+
+/* ---- shared by all three auth cards: resident OTP, admin login, invite ---- */
+.auth-field { width: 100%; display: block; margin-top: 12px; }
+.auth-field > span {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.auth-input {
+  width: 100%;
+  padding: 12px 13px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS Safari zooming the whole page on focus */
+}
+.auth-input:focus { outline: none; border-color: var(--brand-bright); }
+.auth-input:disabled { opacity: 0.6; }
+/* The one-time code is read back digit by digit, so space it out and centre it. */
+.auth-code { text-align: center; letter-spacing: 0.42em; font-size: 22px; font-weight: 600; }
+
+.auth-error { width: 100%; margin: 4px 0 8px; }
+.auth-sent { width: 100%; margin: 0 0 4px; font-size: 13.5px; color: var(--text-dim); text-align: center; }
+.auth-sent b { color: var(--text); }
+
+/* The demo code panel. Present only when the SERVER returns one, so it is a real
+   code from a real challenge and vanishes the moment demo mode is off. */
+.auth-demo {
+  width: 100%;
+  margin: 10px 0 2px;
+  padding: 10px 12px;
+  background: #16241f;
+  border: 1px dashed var(--brand);
+  border-radius: 10px;
+  text-align: center;
+}
+.auth-demo > span { display: block; font-size: 11.5px; color: var(--text-dim); }
+.auth-demo > b {
+  display: block;
+  margin: 2px 0 4px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: var(--brand-bright);
+}
+.auth-demo > small { display: block; font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+/* The invited officer's jurisdiction — shown, never editable. */
+.auth-corp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 8px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.auth-corp b { font-size: 13.5px; font-weight: 600; }
 
 /* ------------------------------------------------------------ citizen */
 .citizen {
@@ -761,12 +826,66 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .report-shell .kv span:last-child { color: var(--ink); }
 .report-shell .kv + .kv { border-top: 1px solid var(--line); }
 
-/* ---- placeholder (my complaints) ---- */
+/* ---- placeholder (empty states) ---- */
 .placeholder { text-align: center; max-width: 420px; margin: 8vh auto 0; }
 .placeholder-glyph { font-size: 44px; margin-bottom: 8px; }
 .placeholder h1 { font-size: 24px; margin: 0 0 6px; color: var(--ink); }
 .placeholder .tagline { color: var(--crimson); font-weight: 600; margin: 0 0 6px; }
 .placeholder-hint { color: var(--ink-dim); font-size: 14px; }
+.mc-cta { display: inline-block; width: auto; margin-top: 18px; padding: 11px 22px; text-decoration: none; }
+
+/* ---- my complaints: the resident's own reports and what the city did ---- */
+.mc-list { display: flex; flex-direction: column; gap: 12px; }
+.mc-card {
+  display: flex;
+  gap: 14px;
+  background: var(--box);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+.mc-thumb {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.mc-body { min-width: 0; flex: 1; }
+.mc-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
+.mc-raw { margin: 0 0 4px; color: var(--ink); font-size: 15px; line-height: 1.6; }
+.mc-summary { margin: 0; color: var(--ink-dim); font-size: 13.5px; line-height: 1.6; }
+.mc-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  color: var(--ink-dim);
+  font-size: 12px;
+}
+/* Status is the one place this page spends colour: it is the answer to the only
+   question a resident opened it to ask. */
+.mc-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.mc-status.open { border-color: rgba(232, 26, 77, 0.35); color: var(--crimson); }
+.mc-status.dispatched { border-color: rgba(216, 162, 44, 0.5); color: #8a6410; }
+.mc-status.resolved { border-color: rgba(31, 122, 92, 0.45); color: var(--brand); }
+.mc-status.pending { border-style: dashed; }
+
+@media (max-width: 560px) {
+  .mc-thumb { width: 64px; height: 64px; }
+}
 
 /* ==================================================== mobile chrome */
 /* Phone-only top bar + bottom tab nav. Hidden on desktop; shown at <=720px,

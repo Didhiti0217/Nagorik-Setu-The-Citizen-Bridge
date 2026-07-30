@@ -68,3 +68,5 @@ server/eval/photos/*
 
 # --- local design-tool cache, not source ---
 .impeccable/
+# Browser-automation scratch (snapshots, console logs) from local UI checks.
+.playwright-mcp/

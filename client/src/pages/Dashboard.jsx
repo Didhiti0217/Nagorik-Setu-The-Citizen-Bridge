@@ -27,7 +27,7 @@ import IssueDrawer from '../components/IssueDrawer.jsx';
 import CopilotChat from '../components/CopilotChat.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
-import { useAdminSession } from '../lib/session.js';
+import { useSession } from '../lib/session.js';
 import { corpName, containsPoint, filterIssues } from '../lib/corporations.js';
 
 function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
@@ -66,7 +66,8 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
 
 export default function DashboardPage() {
   const { setLang, category, t, lang } = useLang();
-  const { corporation } = useAdminSession();
+  // The jurisdiction comes from the signed-in account's token, not from a picker.
+  const { corporation } = useSession();
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

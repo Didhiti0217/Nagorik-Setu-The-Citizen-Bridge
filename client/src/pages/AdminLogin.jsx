@@ -1,31 +1,47 @@
 /**
- * Admin sign-in — pick which city corporation's console you are entering.
+ * Admin sign-in — email and password against a provisioned account.
  *
- * There is no password (CLAUDE.md §4 keeps auth a demo-grade stub), and the page
- * says so plainly rather than implying a security model it does not have. The
- * only real decision here is jurisdiction, which is what actually changes what
- * the console shows.
+ * This page used to be a radio list of city corporations with no password at all.
+ * The list is gone on purpose: an officer choosing which city's workload to open
+ * is not a view preference, it is an authorization decision, and it now lives on
+ * the account (server/src/models/AdminUser.js). Whichever jurisdiction the token
+ * carries is the one the console shows.
+ *
+ * Accounts are seeded (server/scripts/seed-admins.js) or created by accepting an
+ * invitation. There is no self-registration, so there is no "sign up" link to
+ * offer — the page says where an account comes from instead of dead-ending.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-import { CORPORATIONS, corpName } from '../lib/corporations.js';
-import { useAdminSession } from '../lib/session.js';
+import { adminLogin } from '../lib/api.js';
+import { useSession } from '../lib/session.js';
 import { useLang } from '../i18n/index.jsx';
 import logo from '../images/logo.png';
 
 export default function AdminLoginPage() {
   const { t, lang, toggle } = useLang();
-  const { corporation, signIn } = useAdminSession();
-  const [picked, setPicked] = useState(corporation?.id ?? null);
+  const { signIn } = useSession();
   const navigate = useNavigate();
   const bn = lang === 'bn';
 
-  function submit(e) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function submit(e) {
     e.preventDefault();
-    if (!picked) return;
-    signIn(picked);
-    navigate('/admin');
+    setError(null);
+    setBusy(true);
+    try {
+      signIn(await adminLogin(email, password));
+      navigate('/admin', { replace: true });
+    } catch (err) {
+      setError(err.message);
+      setPassword('');
+      setBusy(false);
+    }
   }
 
   return (
@@ -38,39 +54,48 @@ export default function AdminLoginPage() {
         <img className="adminlogin-logo" src={logo} alt="নাগরিক সেতু — Nagorik Setu" draggable="false" />
 
         <h1 className={bn ? 'bn' : ''}>{t('adminSignIn')}</h1>
-        <p className={`adminlogin-sub ${bn ? 'bn' : ''}`}>{t('selectCorporation')}</p>
+        <p className={`adminlogin-sub ${bn ? 'bn' : ''}`}>{t('adminSignInSub')}</p>
 
-        <div className="adminlogin-list" role="radiogroup" aria-label={t('selectCorporation')}>
-          {CORPORATIONS.map((corp) => (
-            <button
-              key={corp.id}
-              type="button"
-              role="radio"
-              aria-checked={picked === corp.id}
-              className={`corp-option${picked === corp.id ? ' picked' : ''}`}
-              onClick={() => setPicked(corp.id)}
-            >
-              <span className="corp-abbr">{corp.abbr}</span>
-              <span className="corp-names">
-                <b className={bn ? 'bn' : ''}>{corpName(corp, lang)}</b>
-                <small>{bn ? corp.nameEn : corp.nameBn}</small>
-              </span>
-              <span className="corp-tick" aria-hidden="true">✓</span>
-            </button>
-          ))}
-        </div>
+        {error && <div className={`error-box auth-error ${bn ? 'bn' : ''}`}>{error}</div>}
 
-        <p className={`adminlogin-hint ${bn ? 'bn' : ''}`}>{t('selectCorporationHint')}</p>
+        <label className={`auth-field ${bn ? 'bn' : ''}`}>
+          <span>{t('emailLabel')}</span>
+          <input
+            className="auth-input"
+            type="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={busy}
+            autoFocus
+            dir="ltr"
+          />
+        </label>
 
-        <button type="submit" className="adminlogin-submit" disabled={!picked}>
-          {t('enterConsole')}
+        <label className={`auth-field ${bn ? 'bn' : ''}`}>
+          <span>{t('passwordLabel')}</span>
+          <input
+            className="auth-input"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={busy}
+            dir="ltr"
+          />
+        </label>
+
+        <p className={`adminlogin-hint ${bn ? 'bn' : ''}`}>{t('jurisdictionFromAccount')}</p>
+
+        <button className="adminlogin-submit" type="submit" disabled={busy || !email.trim() || !password}>
+          {busy ? t('verifying') : t('enterConsole')}
         </button>
 
-        <p className={`adminlogin-demo ${bn ? 'bn' : ''}`}>{t('demoNotice')}</p>
+        <p className={`adminlogin-demo ${bn ? 'bn' : ''}`}>{t('noAdminAccount')}</p>
 
-        <button type="button" className="adminlogin-back" onClick={() => navigate('/')}>
+        <Link className="adminlogin-back" to="/">
           {t('backToCitizen')}
-        </button>
+        </Link>
       </form>
     </div>
   );

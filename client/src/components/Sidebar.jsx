@@ -15,7 +15,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 
 import { useLang } from '../i18n/index.jsx';
-import { useAdminSession } from '../lib/session.js';
+import { useSession } from '../lib/session.js';
 import { corpShort } from '../lib/corporations.js';
 import logo from '../images/logo.png';
 
@@ -78,9 +78,16 @@ const NAV = {
 
 export default function Sidebar({ variant = 'citizen' }) {
   const { t, lang } = useLang();
-  const { corporation, signOut } = useAdminSession();
+  const { user, corporation, signOut } = useSession();
   const navigate = useNavigate();
   const isAdmin = variant === 'admin';
+
+  // Sign-out is awaited so the redirect happens after the session is cleared —
+  // navigating first would race the guard and could bounce back into the app.
+  const leave = async (to) => {
+    await signOut();
+    navigate(to);
+  };
 
   return (
     <aside className="sidebar">
@@ -110,14 +117,20 @@ export default function Sidebar({ variant = 'citizen' }) {
             <b>{corporation.abbr}</b>
             <small>{corpShort(corporation, lang)}</small>
           </span>
-          <button
-            type="button"
-            className="sidebar-signout"
-            onClick={() => {
-              signOut();
-              navigate('/admin/login');
-            }}
-          >
+          <button type="button" className="sidebar-signout" onClick={() => leave('/admin/login')}>
+            {t('signOut')}
+          </button>
+        </div>
+      )}
+
+      {/* The resident sees which number they are signed in with — masked, because
+          a shared phone left on this screen should not display it in full. */}
+      {!isAdmin && user && (
+        <div className="sidebar-foot">
+          <span className="sidebar-corp">
+            <b dir="ltr">{user.masked || user.name || '•••'}</b>
+          </span>
+          <button type="button" className="sidebar-signout" onClick={() => leave('/login')}>
             {t('signOut')}
           </button>
         </div>

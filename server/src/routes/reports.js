@@ -29,7 +29,11 @@ const MIME_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'
 // What My Complaints needs to know about the issue a report was folded into, and
 // nothing more. Selecting explicitly keeps the councilor-only fields — merge
 // reasons, the dispatch brief's internal notes — out of a citizen's response.
-const ISSUE_FIELDS = 'status category severity summaryBn summaryEn slaDueAt dispatchBrief.priority';
+// reportCount is included deliberately: "your report was one of 4 about this" is
+// the single most reassuring thing the app can tell a resident, and it is the
+// product's whole argument stated from the citizen's side.
+const ISSUE_FIELDS =
+  'status category severity summaryBn summaryEn slaDueAt reportCount dispatchBrief.priority';
 
 export function reportsRouter({ processReport, uploadsDir }) {
   const router = Router();
