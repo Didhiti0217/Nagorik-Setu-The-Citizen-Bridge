@@ -198,122 +198,178 @@ a { color: var(--brand-bright); }
 }
 
 /* ------------------------------------------------- admin sign-in */
+/* White + crimson, matching the citizen app and console. Thin crimson navbar on
+   top; below it, a heading + a 2-up corporation grid in a rounded off-white box
+   on the left, and the enter action centred on the right. Fluid, and stacks to a
+   single column on small screens. */
 .adminlogin {
-  min-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 20px;
-  background: radial-gradient(1100px 500px at 50% -10%, #2a1420 0%, var(--bg) 62%);
-}
-.adminlogin-lang {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 8px;
-  padding: 7px 13px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.adminlogin-lang:hover { color: var(--text); }
-
-.adminlogin-card {
-  width: 100%;
-  max-width: 460px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 30px 26px 24px;
-  box-shadow: var(--shadow);
+  --crimson: #e81a4d;
+  --crimson-dark: #cf1241;
+  --ink: #16191d;
+  --ink-dim: #667081;
+  --line: #ebe9e6;
+  --box: #f7f6f3;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  background: #fff;
+  color: var(--ink);
 }
-.adminlogin-logo {
-  width: 132px;
-  height: auto;
-  /* The mark is white-on-transparent, drawn for the crimson field — a touch of
-     brightness keeps it from muddying against the dark card. */
-  filter: brightness(1.08);
-}
-.adminlogin-card h1 { margin: 12px 0 4px; font-size: 21px; font-weight: 650; }
-.adminlogin-sub { margin: 0 0 18px; color: var(--text-dim); font-size: 13.5px; text-align: center; }
 
-.adminlogin-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+/* thin crimson navbar */
+.adminlogin-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px clamp(16px, 3vw, 34px);
+  background: var(--crimson);
+}
+.adminlogin-navlogo {
+  display: block;
+  overflow: hidden;
+  height: clamp(30px, 3.4vw, 42px);
+  width: clamp(30px, 3.4vw, 42px);
+}
+.adminlogin-navlogo img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: scale(2.05);
+  transform-origin: 50% 47%;
+}
+.adminlogin-navlang {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  border-radius: 9px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 600;
+  cursor: pointer;
+}
+.adminlogin-navlang:hover { background: rgba(255, 255, 255, 0.26); }
+
+/* body: heading + corp box (left) · enter action (right, centred) */
+.adminlogin-body {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 26vw, 380px);
+  gap: clamp(24px, 4vw, 60px);
+  padding: clamp(24px, 4vw, 56px);
+  align-items: stretch;
+}
+
+.adminlogin-left { display: flex; flex-direction: column; gap: clamp(16px, 2vw, 26px); min-width: 0; }
+.adminlogin-head h1 { margin: 0 0 4px; font-size: clamp(22px, 2vw, 34px); font-weight: 700; color: var(--ink); }
+.adminlogin-head p { margin: 0; color: var(--ink-dim); font-size: clamp(13.5px, 1.1vw, 17px); }
+
+/* off-white box with slightly bent edges, holding the 2-up grid */
+.adminlogin-box {
+  background: var(--box);
+  border: 1px solid var(--line);
+  border-radius: clamp(18px, 1.6vw, 26px);
+  padding: clamp(14px, 1.5vw, 22px);
+}
+.corp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 1vw, 16px); }
 
 .corp-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
-  padding: 11px 13px;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
+  padding: clamp(12px, 1.1vw, 18px) clamp(13px, 1.1vw, 18px);
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
+  transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
-.corp-option:hover { border-color: #46536a; }
-.corp-option.picked { border-color: var(--brand-bright); background: #16241f; }
+.corp-option:hover { border-color: #d9d7d3; }
+.corp-option.picked {
+  border-color: var(--crimson);
+  background: #fff5f8;
+  box-shadow: 0 0 0 3px rgba(232, 26, 77, 0.12);
+}
 
 .corp-abbr {
   flex: 0 0 auto;
   min-width: 46px;
-  padding: 4px 7px;
-  border-radius: 6px;
-  background: #0e1620;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--box);
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-size: clamp(11px, 0.9vw, 13px);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-align: center;
 }
-.corp-option.picked .corp-abbr { color: var(--brand-bright); border-color: var(--brand); }
+.corp-option.picked .corp-abbr { color: var(--crimson); border-color: rgba(232, 26, 77, 0.4); background: #fff; }
 
 .corp-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.corp-names b { font-size: 14px; font-weight: 600; }
-.corp-names small { font-size: 11.5px; color: var(--text-dim); }
+.corp-names b { font-size: clamp(14px, 1.05vw, 17px); font-weight: 600; color: var(--ink); }
+.corp-names small {
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  color: var(--ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-.corp-tick { margin-left: auto; color: var(--brand-bright); opacity: 0; font-weight: 700; }
+.corp-tick { margin-left: auto; color: var(--crimson); opacity: 0; font-weight: 700; }
 .corp-option.picked .corp-tick { opacity: 1; }
 
-.adminlogin-hint { margin: 14px 0 0; font-size: 12px; color: var(--text-dim); text-align: center; }
-
+/* right column: enter action + supporting text, vertically centred */
+.adminlogin-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  text-align: center;
+  gap: 12px;
+}
+.adminlogin-hint { margin: 0; font-size: clamp(12px, 0.95vw, 15px); color: var(--ink-dim); }
 .adminlogin-submit {
   width: 100%;
-  margin-top: 14px;
-  padding: 12px;
+  padding: clamp(14px, 1.2vw, 18px);
   border: 0;
-  border-radius: 10px;
-  background: var(--brand);
+  border-radius: 14px;
+  background: var(--crimson);
   color: #fff;
   font: inherit;
-  font-weight: 650;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: clamp(15px, 1.2vw, 19px);
   cursor: pointer;
   transition: background 120ms ease;
 }
-.adminlogin-submit:hover:not(:disabled) { background: var(--brand-bright); }
+.adminlogin-submit:hover:not(:disabled) { background: var(--crimson-dark); }
 .adminlogin-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-
-.adminlogin-demo { margin: 12px 0 0; font-size: 11.5px; color: var(--text-dim); text-align: center; }
+.adminlogin-demo { margin: 0; font-size: clamp(11.5px, 0.9vw, 14px); color: var(--ink-dim); }
 .adminlogin-back {
-  margin-top: 14px;
+  margin-top: 4px;
   background: none;
   border: 0;
-  color: var(--text-dim);
+  color: var(--ink-dim);
   font: inherit;
-  font-size: 13px;
+  font-size: clamp(13px, 1vw, 15px);
   cursor: pointer;
 }
-.adminlogin-back:hover { color: var(--text); }
+.adminlogin-back:hover { color: var(--crimson); }
+
+/* stack everything one under the other on small screens */
+@media (max-width: 860px) {
+  .adminlogin-body { grid-template-columns: 1fr; gap: 22px; padding: 22px 16px 40px; }
+  .adminlogin-right { justify-content: flex-start; }
+}
+@media (max-width: 520px) {
+  .corp-grid { grid-template-columns: 1fr; }
+}
 
 /* ------------------------------------------------------------ citizen */
 .citizen {
@@ -1157,4 +1213,60 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   }
   .dash2-aside.chat-open .dash-chat { transform: none; }
   .dash2 .drawer { position: fixed; inset: 0; width: auto; z-index: 50; }
+}
+
+/* ============================================ large-screen scale-up (fluid) */
+/* The base layout is tuned for ~1280px. On bigger monitors, fixed px made the
+   UI look small in a sea of empty space. Here we let the key components grow
+   with the viewport. Every value is min-anchored to its current size (the vw
+   term ≈ the old px at 1280px), so there is NO change or jump below 1280px —
+   small, medium, tablet and phone layouts are all untouched — and a clamp cap
+   keeps things sane on ultrawide displays. */
+@media (min-width: 1280px) {
+  /* ---- shared type scale ---- */
+  .report-head h1        { font-size: clamp(26px, 2.03vw, 40px); }
+  .report-box .box-label { font-size: clamp(13px, 1.02vw, 16px); }
+  .report-shell textarea { font-size: clamp(16px, 1.25vw, 20px); }
+  .report-confirm h1     { font-size: clamp(24px, 1.9vw, 34px); }
+  .report-content .tagline { font-size: clamp(15px, 1.15vw, 19px); }
+  .transparency h1       { font-size: clamp(22px, 1.72vw, 32px); }
+
+  /* ---- citizen report: wider content + bigger fields on large screens ---- */
+  .report-shell { grid-template-columns: clamp(216px, 17vw, 300px) 1fr; }
+  .report-content { max-width: clamp(860px, 67vw, 1320px); }
+  .report-boxes { gap: clamp(16px, 1.3vw, 28px); }
+  .report-shell textarea,
+  .report-shell .photo-drop { min-height: clamp(168px, 13vw, 240px); }
+  .report-submit { font-size: clamp(16px, 1.25vw, 20px); padding: clamp(15px, 1.2vw, 20px); }
+  .report-confirm { max-width: clamp(460px, 36vw, 620px); }
+  .placeholder { max-width: clamp(420px, 33vw, 560px); }
+
+  /* ---- landing splash + doors ---- */
+  .landing-art { width: min(74vmin, clamp(460px, 33vw, 620px)); }
+  .landing-doors { max-width: clamp(620px, 48vw, 900px); }
+  .door b { font-size: clamp(17px, 1.33vw, 26px); }
+  .door-glyph { font-size: clamp(26px, 2.03vw, 40px); }
+
+  /* (admin sign-in scales itself via clamp() in its own rules above) */
+
+  /* ---- corporation console: bigger rail, chat, cards and text ---- */
+  .dash2 { grid-template-columns: clamp(216px, 17vw, 320px) 1fr clamp(366px, 28vw, 560px); }
+  .dash2-head h2 { font-size: clamp(17px, 1.33vw, 26px); }
+  .dash2-head p { font-size: clamp(12px, 0.95vw, 16px); }
+  .d2-stat b { font-size: clamp(22px, 1.72vw, 34px); }
+  .d2-stat span { font-size: clamp(10px, 0.78vw, 13px); }
+  .d2-cards {
+    grid-template-columns: repeat(auto-fill, minmax(clamp(206px, 16vw, 300px), 1fr));
+    gap: clamp(14px, 1.2vw, 24px);
+  }
+  .d2-card-summary { font-size: clamp(13px, 1.02vw, 16px); }
+
+  /* ---- copilot chat ---- */
+  .chat-title { font-size: clamp(16px, 1.25vw, 22px); }
+  .chat-sub { font-size: clamp(12px, 0.95vw, 15px); }
+  .chat-bubble { font-size: clamp(13.5px, 1.06vw, 17px); }
+  .chat-form input { font-size: clamp(14px, 1.1vw, 18px); }
+
+  /* ---- transparency audit log ---- */
+  .transparency { max-width: clamp(1080px, 80vw, 1500px); }
 }
