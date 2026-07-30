@@ -12,11 +12,25 @@ Built for *Build with Gemma: ML, AI, Deep Learning & NLP Community Hackathon* (G
 
 - **App:** https://nagorik-setu.vercel.app
   - **Citizen** (report a problem, Bangla): https://nagorik-setu.vercel.app/report
-  - **Councilor dashboard** (live map, ranked queue, copilot): https://nagorik-setu.vercel.app/dashboard
+  - **Councilor dashboard** (live map, ranked queue, copilot): https://nagorik-setu.vercel.app/admin
   - **Transparency** (every raw Gemma 4 call): https://nagorik-setu.vercel.app/transparency
 - **API:** https://nagorik-setu-api-ciee.onrender.com/api/health
 
-No login required. Seeded with a synthetic corpus processed through the real pipeline
+**No account, no signup form, no paywall — but reporting is tied to a phone number,
+so there are two doors. Both are open to you right now:**
+
+| Door | How to get in |
+|---|---|
+| **Resident** — [`/report`](https://nagorik-setu.vercel.app/report) | Enter **any** Bangladeshi-format mobile number (e.g. `01712345678`). The deployment runs in demo mode, so the 6-digit code is displayed on screen instead of being sent by SMS — no SIM needed. The number is never dialled or texted. |
+| **Councilor console** — [`/admin`](https://nagorik-setu.vercel.app/admin) | `gcc@nagoriksetu.demo` · password `nagorik-demo-2026`. A published demo account, deliberately: a municipal work queue is not public data, and an empty login box would be a worse answer than a shared one. |
+| **Transparency** — [`/transparency`](https://nagorik-setu.vercel.app/transparency) | Nothing. Left public on purpose so every raw Gemma 4 call, its latency and its output can be inspected without signing in at all. |
+
+Why any sign-in at all: a resident has to be able to follow *their own* complaint, and one
+citizen must not be able to read another's free text and precise location. The whole
+authorization surface is in [`server/src/middleware/auth.js`](server/src/middleware/auth.js)
+and is regression-tested by `npm run api:smoke` (70 checks, no cloud account needed).
+
+Seeded with a synthetic corpus processed through the real pipeline
 (see [Data & licensing](#data--licensing)).
 
 ---
@@ -164,8 +178,24 @@ cp .env.example .env    # then fill in GOOGLE_API_KEY and MONGODB_URI
 | `GOOGLE_API_KEY` | AI Studio key (only for `aistudio`) |
 | `OLLAMA_HOST` / `OLLAMA_MODEL` | for the offline path |
 | `MONGODB_URI` | MongoDB connection string |
+| `JWT_SECRET` | HS256 session signing key — **the server refuses to start** without at least 32 characters (`openssl rand -base64 48`) |
+| `AUTH_DEMO_MODE` | `true` returns the login code in the API response so the demo needs no SMS gateway. Only valid with `OTP_SENDER=demo`; the pairing check is a boot interlock, not a warning |
+| `ADMIN_SEED` | `<corporation>:<email>[:<password>]`, `;`-separated — consumed by `npm run seed:admins` |
 
 > `.env` is gitignored. Never commit real keys.
+
+### Create a console account
+
+Admin accounts are never self-registered — they are seeded, or created by accepting an
+invitation from an officer who already holds that jurisdiction. A fresh database has no
+way into the console until you run:
+
+```bash
+npm run seed:admins        # reads ADMIN_SEED / ADMIN_SEED_PASSWORD
+```
+
+Idempotent: existing accounts keep their passwords unless you pass `--reset-password`.
+Residents need no provisioning at all — the first correct one-time code creates the account.
 
 ### Run
 
@@ -183,6 +213,16 @@ node scripts/pipeline-demo.js
 Runs the full triage → evidence → dedupe → dispatch pipeline over a realistic burst of
 nine Gazipur complaints using in-memory storage. No database required. This is the
 clearest demonstration of the deduplication claim.
+
+```bash
+npm run api:smoke
+```
+
+Boots an in-memory MongoDB and the real Express app with Gemma set to fixtures, then
+asserts 70 behaviours: the geospatial dedupe, the async 202 pipeline, SSE, the audit log,
+the copilot tool boundary, and every authorization rule — the whole OTP round trip, the
+attempt cap, invite jurisdiction inheritance, and each role boundary. No key, no cloud
+account, no network.
 
 ---
 

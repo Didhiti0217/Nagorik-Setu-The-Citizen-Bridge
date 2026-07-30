@@ -19,7 +19,7 @@ Owners: **P1** = Participant 1 (Dev A, Gemma engine) · **P2** = Farhan (Dev B, 
 | 1 | ~~Deploy the API on Render with the CORS fix~~ ✅ **DONE** — `nagorik-setu-api-ciee.onrender.com` | user | — | — | Deployed from own repo; CORS `*` confirmed, DB connected, /api/issues serves 17. |
 | 2 | ~~Verify CORS~~ ✅ **DONE** — `access-control-allow-origin: *` confirmed live | — | — | — | Health, issues, geojson, transparency, SSE all verified against the live URL. |
 | 3 | **Deploy the frontend** (Vercel), Root Dir `client`, `VITE_API_BASE=https://nagorik-setu-api-ciee.onrender.com` | user | 10 min | — | Config DONE (`client/vercel.json`, `DEPLOY-FRONTEND.md`). One import + one env var. **The demo URL judges click — 6 of 20 Functionality points.** |
-| 4 | Open the deployed URL in a **private window** — no login, no paywall | user | 5 min | 3 | Explicit competition rule. A demo that needs auth is disqualified. |
+| 4 | Open the deployed URL in a **private window** and complete both sign-ins with only what the README publishes | user | 5 min | 3 | Explicit competition rule. Since auth landed this needs `JWT_SECRET` + `ADMIN_SEED_PASSWORD=nagorik-demo-2026` set on Render and `npm run seed:admins` run against Atlas — otherwise the console credential in the README does not work and the demo IS behind a login. |
 
 ---
 

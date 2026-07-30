@@ -38,10 +38,20 @@ If that prints `access-control-allow-origin: *`, the frontend will work against 
 
 ## After deploying - REQUIRED before submission
 
-- Open the deployed URL in a **private/incognito window**. It must work with no login.
-  This is an explicit competition rule; a demo behind auth is disqualified.
-- Visit `/dashboard` - the map should show 17 issues and the queue should populate.
-- Hard-refresh on `/dashboard` - it must NOT 404 (the SPA rewrite handles this).
+- Open the deployed URL in a **private/incognito window** and complete BOTH sign-ins
+  using only what the README publishes — no account of your own, no SIM, no paywall:
+  - resident: any Bangladeshi-format number (`01712345678`); the code is shown on screen
+    because the API runs with `AUTH_DEMO_MODE=true`
+  - console: `gcc@nagoriksetu.demo` / `nagorik-demo-2026` (needs `npm run seed:admins`
+    to have been run against the same Atlas database — see `DEPLOY.md` §2b)
+
+  This is the explicit competition rule about a demo behind auth. It is satisfied by the
+  credentials being published, not by the app being open, so **if the README credential
+  and the seeded password ever disagree, the demo is effectively behind a login.**
+- Visit `/admin` after signing in - the map should show the seeded issues and the queue
+  should populate, with the live badge green (the SSE stream ticket is working).
+- Hard-refresh on `/admin` and on `/admin/invite/anything` - neither must 404 (the SPA
+  rewrite handles this).
 - Optionally, lock the API's `CLIENT_ORIGIN` env var on Render down from `*` to your
   actual Vercel URL, then redeploy the API once more. Not required for judging.
 
