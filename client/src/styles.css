@@ -198,124 +198,136 @@ a { color: var(--brand-bright); }
 }
 
 /* ------------------------------------------------- admin sign-in */
+/* White + crimson, matching the citizen app and console. Thin crimson navbar on
+   top; below it, a heading + a 2-up corporation grid in a rounded off-white box
+   on the left, and the enter action centred on the right. Fluid, and stacks to a
+   single column on small screens. */
 .adminlogin {
-  min-height: 100%;
+  --crimson: #e81a4d;
+  --crimson-dark: #cf1241;
+  --ink: #16191d;
+  --ink-dim: #667081;
+  --line: #ebe9e6;
+  --box: #f7f6f3;
+  min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 32px 20px;
-  background: radial-gradient(1100px 500px at 50% -10%, #2a1420 0%, var(--bg) 62%);
+  background: #fff;
+  color: var(--ink);
 }
+
+/* The jurisdiction badge, still shown on the invite-acceptance page to tell an
+   invited officer which console they are about to join. The corporation *picker*
+   that used to surround it is gone — jurisdiction comes from the account now —
+   so only the badge itself survives. */
+.corp-abbr {
+  flex: 0 0 auto;
+  min-width: 46px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--box);
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-size: clamp(11px, 0.9vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.adminlogin-hint {
+  width: 100%;
+  margin: 14px 0 0;
+  font-size: clamp(12px, 0.95vw, 15px);
+  color: var(--ink-dim);
+  text-align: center;
+}
+.adminlogin-submit {
+  width: 100%;
+  padding: clamp(14px, 1.2vw, 18px);
+  border: 0;
+  border-radius: 14px;
+  background: var(--crimson);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: clamp(15px, 1.2vw, 19px);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.adminlogin-submit:hover:not(:disabled) { background: var(--crimson-dark); }
+.adminlogin-submit:disabled { opacity: 0.45; cursor: not-allowed; }
+.adminlogin-demo { margin: 0; font-size: clamp(11.5px, 0.9vw, 14px); color: var(--ink-dim); }
+.adminlogin-back {
+  margin-top: 4px;
+  background: none;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: clamp(13px, 1vw, 15px);
+  cursor: pointer;
+}
+.adminlogin-back:hover { color: var(--crimson); }
+.adminlogin-back:disabled { opacity: 0.5; cursor: default; }
+a.adminlogin-back { text-decoration: none; text-align: center; }
+
+/* ---- the card the three auth pages actually render ----
+   The redesign replaced this with a two-column corporation picker, but that
+   picker is gone: choosing a jurisdiction is an authorization decision that now
+   lives on the account, not a control on a page. The card is restored here in
+   the redesign's white/crimson language so resident OTP, admin login and invite
+   acceptance all keep a shell — and all three match the rest of the app. */
 .adminlogin-lang {
   position: fixed;
   top: 16px;
   right: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  border-radius: 8px;
-  padding: 7px 13px;
-  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  border-radius: 9px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: clamp(13px, 1vw, 15px);
+  font-weight: 600;
   cursor: pointer;
 }
-.adminlogin-lang:hover { color: var(--text); }
+.adminlogin-lang:hover { color: var(--ink); border-color: #d9d7d3; }
 
 .adminlogin-card {
   width: 100%;
-  max-width: 460px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 30px 26px 24px;
-  box-shadow: var(--shadow);
+  max-width: clamp(400px, 34vw, 520px);
+  background: var(--box);
+  border: 1px solid var(--line);
+  border-radius: clamp(18px, 1.6vw, 26px);
+  padding: clamp(24px, 2.4vw, 36px) clamp(20px, 2vw, 32px);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 .adminlogin-logo {
-  width: 132px;
+  /* The mark is white-on-transparent, drawn for the crimson field, so on this
+     off-white card it needs the crimson painted back in behind it. */
+  width: clamp(64px, 6vw, 88px);
   height: auto;
-  /* The mark is white-on-transparent, drawn for the crimson field — a touch of
-     brightness keeps it from muddying against the dark card. */
-  filter: brightness(1.08);
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--crimson);
 }
-.adminlogin-card h1 { margin: 12px 0 4px; font-size: 21px; font-weight: 650; }
-.adminlogin-sub { margin: 0 0 18px; color: var(--text-dim); font-size: 13.5px; text-align: center; }
-
-.adminlogin-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-
-.corp-option {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 11px 13px;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-.corp-option:hover { border-color: #46536a; }
-.corp-option.picked { border-color: var(--brand-bright); background: #16241f; }
-
-.corp-abbr {
-  flex: 0 0 auto;
-  min-width: 46px;
-  padding: 4px 7px;
-  border-radius: 6px;
-  background: #0e1620;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  font-size: 11px;
+.adminlogin-card h1 {
+  margin: 14px 0 4px;
+  font-size: clamp(21px, 1.7vw, 28px);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  color: var(--ink);
   text-align: center;
 }
-.corp-option.picked .corp-abbr { color: var(--brand-bright); border-color: var(--brand); }
-
-.corp-names { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.corp-names b { font-size: 14px; font-weight: 600; }
-.corp-names small { font-size: 11.5px; color: var(--text-dim); }
-
-.corp-tick { margin-left: auto; color: var(--brand-bright); opacity: 0; font-weight: 700; }
-.corp-option.picked .corp-tick { opacity: 1; }
-
-.adminlogin-hint { margin: 14px 0 0; font-size: 12px; color: var(--text-dim); text-align: center; }
-
-.adminlogin-submit {
-  width: 100%;
-  margin-top: 14px;
-  padding: 12px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--brand);
-  color: #fff;
-  font: inherit;
-  font-weight: 650;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 120ms ease;
+.adminlogin-sub {
+  margin: 0 0 14px;
+  color: var(--ink-dim);
+  font-size: clamp(13px, 1vw, 15.5px);
+  text-align: center;
 }
-.adminlogin-submit:hover:not(:disabled) { background: var(--brand-bright); }
-.adminlogin-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-
-.adminlogin-demo { margin: 12px 0 0; font-size: 11.5px; color: var(--text-dim); text-align: center; }
-.adminlogin-back {
-  margin-top: 14px;
-  background: none;
-  border: 0;
-  color: var(--text-dim);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-.adminlogin-back:hover { color: var(--text); }
-.adminlogin-back:disabled { opacity: 0.5; cursor: default; }
-a.adminlogin-back { text-decoration: none; text-align: center; }
 
 /* ---- shared by all three auth cards: resident OTP, admin login, invite ---- */
 .auth-field { width: 100%; display: block; margin-top: 12px; }
@@ -323,27 +335,27 @@ a.adminlogin-back { text-decoration: none; text-align: center; }
   display: block;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--ink-dim);
   margin-bottom: 6px;
 }
 .auth-input {
   width: 100%;
   padding: 12px 13px;
-  background: var(--surface-2);
-  border: 1.5px solid var(--border);
+  background: #fff;
+  border: 1.5px solid var(--line);
   border-radius: 10px;
-  color: var(--text);
+  color: var(--ink);
   font: inherit;
   font-size: 16px; /* 16px stops iOS Safari zooming the whole page on focus */
 }
-.auth-input:focus { outline: none; border-color: var(--brand-bright); }
+.auth-input:focus { outline: none; border-color: var(--crimson); }
 .auth-input:disabled { opacity: 0.6; }
 /* The one-time code is read back digit by digit, so space it out and centre it. */
 .auth-code { text-align: center; letter-spacing: 0.42em; font-size: 22px; font-weight: 600; }
 
 .auth-error { width: 100%; margin: 4px 0 8px; }
-.auth-sent { width: 100%; margin: 0 0 4px; font-size: 13.5px; color: var(--text-dim); text-align: center; }
-.auth-sent b { color: var(--text); }
+.auth-sent { width: 100%; margin: 0 0 4px; font-size: 13.5px; color: var(--ink-dim); text-align: center; }
+.auth-sent b { color: var(--ink); }
 
 /* The demo code panel. Present only when the SERVER returns one, so it is a real
    code from a real challenge and vanishes the moment demo mode is off. */
@@ -351,21 +363,21 @@ a.adminlogin-back { text-decoration: none; text-align: center; }
   width: 100%;
   margin: 10px 0 2px;
   padding: 10px 12px;
-  background: #16241f;
-  border: 1px dashed var(--brand);
+  background: #fff;
+  border: 1px dashed var(--crimson);
   border-radius: 10px;
   text-align: center;
 }
-.auth-demo > span { display: block; font-size: 11.5px; color: var(--text-dim); }
+.auth-demo > span { display: block; font-size: 11.5px; color: var(--ink-dim); }
 .auth-demo > b {
   display: block;
   margin: 2px 0 4px;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.24em;
-  color: var(--brand-bright);
+  color: var(--crimson);
 }
-.auth-demo > small { display: block; font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+.auth-demo > small { display: block; font-size: 11px; color: var(--ink-dim); line-height: 1.5; }
 
 /* The invited officer's jurisdiction — shown, never editable. */
 .auth-corp {
@@ -374,11 +386,15 @@ a.adminlogin-back { text-decoration: none; text-align: center; }
   gap: 10px;
   margin-bottom: 4px;
   padding: 8px 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 1px solid var(--line);
   border-radius: 10px;
 }
 .auth-corp b { font-size: 13.5px; font-weight: 600; }
+
+@media (max-width: 520px) {
+  .adminlogin-card { max-width: 100%; }
+}
 
 /* ------------------------------------------------------------ citizen */
 .citizen {
@@ -1323,4 +1339,60 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   .dash2-aside.map-open .d2-mapcol { transform: none; }
   .d2-mapclose { display: flex; }
   .dash2 .drawer { position: fixed; inset: 0; width: auto; z-index: 50; }
+}
+
+/* ============================================ large-screen scale-up (fluid) */
+/* The base layout is tuned for ~1280px. On bigger monitors, fixed px made the
+   UI look small in a sea of empty space. Here we let the key components grow
+   with the viewport. Every value is min-anchored to its current size (the vw
+   term ≈ the old px at 1280px), so there is NO change or jump below 1280px —
+   small, medium, tablet and phone layouts are all untouched — and a clamp cap
+   keeps things sane on ultrawide displays. */
+@media (min-width: 1280px) {
+  /* ---- shared type scale ---- */
+  .report-head h1        { font-size: clamp(26px, 2.03vw, 40px); }
+  .report-box .box-label { font-size: clamp(13px, 1.02vw, 16px); }
+  .report-shell textarea { font-size: clamp(16px, 1.25vw, 20px); }
+  .report-confirm h1     { font-size: clamp(24px, 1.9vw, 34px); }
+  .report-content .tagline { font-size: clamp(15px, 1.15vw, 19px); }
+  .transparency h1       { font-size: clamp(22px, 1.72vw, 32px); }
+
+  /* ---- citizen report: wider content + bigger fields on large screens ---- */
+  .report-shell { grid-template-columns: clamp(216px, 17vw, 300px) 1fr; }
+  .report-content { max-width: clamp(860px, 67vw, 1320px); }
+  .report-boxes { gap: clamp(16px, 1.3vw, 28px); }
+  .report-shell textarea,
+  .report-shell .photo-drop { min-height: clamp(168px, 13vw, 240px); }
+  .report-submit { font-size: clamp(16px, 1.25vw, 20px); padding: clamp(15px, 1.2vw, 20px); }
+  .report-confirm { max-width: clamp(460px, 36vw, 620px); }
+  .placeholder { max-width: clamp(420px, 33vw, 560px); }
+
+  /* ---- landing splash + doors ---- */
+  .landing-art { width: min(74vmin, clamp(460px, 33vw, 620px)); }
+  .landing-doors { max-width: clamp(620px, 48vw, 900px); }
+  .door b { font-size: clamp(17px, 1.33vw, 26px); }
+  .door-glyph { font-size: clamp(26px, 2.03vw, 40px); }
+
+  /* (admin sign-in scales itself via clamp() in its own rules above) */
+
+  /* ---- corporation console: bigger rail, chat, cards and text ---- */
+  .dash2 { grid-template-columns: clamp(216px, 17vw, 320px) 1fr clamp(366px, 28vw, 560px); }
+  .dash2-head h2 { font-size: clamp(17px, 1.33vw, 26px); }
+  .dash2-head p { font-size: clamp(12px, 0.95vw, 16px); }
+  .d2-stat b { font-size: clamp(22px, 1.72vw, 34px); }
+  .d2-stat span { font-size: clamp(10px, 0.78vw, 13px); }
+  .d2-cards {
+    grid-template-columns: repeat(auto-fill, minmax(clamp(206px, 16vw, 300px), 1fr));
+    gap: clamp(14px, 1.2vw, 24px);
+  }
+  .d2-card-summary { font-size: clamp(13px, 1.02vw, 16px); }
+
+  /* ---- copilot chat ---- */
+  .chat-title { font-size: clamp(16px, 1.25vw, 22px); }
+  .chat-sub { font-size: clamp(12px, 0.95vw, 15px); }
+  .chat-bubble { font-size: clamp(13.5px, 1.06vw, 17px); }
+  .chat-form input { font-size: clamp(14px, 1.1vw, 18px); }
+
+  /* ---- transparency audit log ---- */
+  .transparency { max-width: clamp(1080px, 80vw, 1500px); }
 }
