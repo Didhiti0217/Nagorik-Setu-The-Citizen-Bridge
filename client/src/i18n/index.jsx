@@ -82,6 +82,7 @@ export const STRINGS = {
     statusManualReview: 'যাচাই করা হচ্ছে',
     statusFailed: 'বিশ্লেষণ করা যায়নি',
     // landing — the two doors
+    landingTagline: 'নাগরিক ও সরকারের মাঝে আস্থার সেতুবন্ধন।',
     citizenDoor: 'সমস্যা জানান',
     citizenDoorHint: 'নাগরিকদের জন্য',
     adminDoor: 'কর্পোরেশন লগইন',
@@ -177,6 +178,7 @@ export const STRINGS = {
     statusResolved: 'Resolved',
     statusManualReview: 'Under review',
     statusFailed: 'Could not be analysed',
+    landingTagline: 'Building the Bridge Between Citizens and Government.',
     citizenDoor: 'Report a problem',
     citizenDoorHint: 'For residents',
     adminDoor: 'Corporation login',

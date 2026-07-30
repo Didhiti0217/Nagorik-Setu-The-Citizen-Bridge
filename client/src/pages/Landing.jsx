@@ -16,7 +16,7 @@ import logo from '../images/logo.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { t, lang } = useLang();
+  const { t, lang, toggle } = useLang();
   const bn = lang === 'bn';
 
   const key = (fn) => (e) => {
@@ -31,12 +31,21 @@ export default function LandingPage() {
 
   return (
     <div className="landing">
+      {/* The language switch belongs on the very first screen: a resident who
+          reads only Bangla must not have to walk through an English door to
+          find it. Shows the language you would switch TO, as everywhere else. */}
+      <button type="button" className="landing-lang" onClick={toggle} title="Switch language">
+        {bn ? 'English' : 'বাংলা'}
+      </button>
+
       <img
         className="landing-art"
         src={logo}
         alt="নাগরিক সেতু — Nagorik Setu"
         draggable="false"
       />
+
+      <p className={`landing-tagline ${bn ? 'bn' : ''}`}>{t('landingTagline')}</p>
 
       <div className="landing-doors">
         <div
