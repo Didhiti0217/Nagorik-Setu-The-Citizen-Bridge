@@ -6,11 +6,10 @@
  *  - Routes use NavLink (which adds `.active`).
  *  - Notification opens a small self-contained sheet — there is no notifications
  *    backend and CLAUDE.md forbids faking one, so it shows an honest empty state.
- *  - Chat (admin only) routes to the console and asks it to open the Copilot
- *    overlay via router state (Dashboard reads location.state.openChat).
+ *  - Copilot (admin only) is a page of its own now, so it is a plain link.
  */
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import { useLang } from '../i18n/index.jsx';
 
@@ -71,7 +70,6 @@ function ComplaintsIcon() {
 
 export default function MobileNav({ variant = 'citizen' }) {
   const { t } = useLang();
-  const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const isAdmin = variant === 'admin';
 
@@ -98,14 +96,10 @@ export default function MobileNav({ variant = 'citizen' }) {
           <span>{t('transparency')}</span>
         </NavLink>
         {isAdmin ? (
-          <button
-            type="button"
-            className="mnav-item"
-            onClick={() => navigate('/admin', { state: { openChat: Date.now() } })}
-          >
+          <NavLink to="/copilot" className="mnav-item">
             <ChatIcon />
-            <span>{t('chat')}</span>
-          </button>
+            <span>{t('copilot')}</span>
+          </NavLink>
         ) : (
           <NavLink to="/my-complaints" className="mnav-item">
             <ComplaintsIcon />

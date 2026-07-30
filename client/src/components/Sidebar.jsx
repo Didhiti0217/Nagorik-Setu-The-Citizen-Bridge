@@ -63,6 +63,13 @@ function TransparencyIcon() {
     </svg>
   );
 }
+function CopilotIcon() {
+  return (
+    <svg viewBox="0 0 24 24" {...stroke}>
+      <path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9.5 9.5 0 0 1-4-.9L3 20l1.9-5.5a8.38 8.38 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z" />
+    </svg>
+  );
+}
 
 const NAV = {
   citizen: [
@@ -72,6 +79,7 @@ const NAV = {
   ],
   admin: [
     { to: '/admin', key: 'dashboard', Icon: DashboardIcon },
+    { to: '/copilot', key: 'copilot', Icon: CopilotIcon },
     { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
   ],
 };

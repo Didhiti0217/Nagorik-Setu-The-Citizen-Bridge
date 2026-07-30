@@ -3,14 +3,18 @@
  *
  * Same mechanism as before: the councilor asks in Bangla or English, Gemma picks
  * one whitelisted tool with typed arguments, the server runs that parameterised
- * query, Gemma narrates the result, and the named issues are highlighted in the
- * card grid (onHighlight). The model never writes a query — it selects from a
- * fixed schema (server/src/lib/copilotTools.js), and we surface the chosen tool
- * under each answer so the mechanism stays visible rather than magic.
+ * query, and Gemma narrates the result. The model never writes a query — it
+ * selects from a fixed schema (server/src/lib/copilotTools.js), and we surface
+ * the chosen tool under each answer so the mechanism stays visible, not magic.
  *
- * Presentation is now a running conversation: right-aligned question bubbles,
+ * Presentation is a running conversation: right-aligned question bubbles,
  * left-aligned answer bubbles, a typing indicator, and suggestion chips that
  * float above the input the way a messaging app offers quick replies.
+ *
+ * When Gemma names specific issues, the answer keeps them and offers a button
+ * rather than calling onHighlight straight away: this panel now lives on its own
+ * page (pages/Copilot.jsx), so acting on the ids means navigating to the work
+ * queue — and doing that automatically would scroll away the answer just given.
  */
 import { useEffect, useRef, useState } from 'react';
 
@@ -22,7 +26,7 @@ const SUGGESTIONS = [
   'Show me all life-threatening issues still open',
 ];
 
-export default function CopilotChat({ onHighlight, onClose }) {
+export default function CopilotChat({ onHighlight }) {
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
@@ -42,13 +46,18 @@ export default function CopilotChat({ onHighlight, onClose }) {
     setBusy(true);
     try {
       const res = await askCopilot(text);
+      // Gemma names the issues worth looking at. They ride along on the message
+      // so the answer can offer to show them, instead of navigating unasked.
+      const ids = res.answer?.highlight_issue_ids;
       setMessages((m) => [
         ...m,
-        { role: 'bot', bn: res.answer?.answer_bn, en: res.answer?.answer_en },
+        {
+          role: 'bot',
+          bn: res.answer?.answer_bn,
+          en: res.answer?.answer_en,
+          ids: ids?.length ? ids.map(String) : null,
+        },
       ]);
-      // Gemma names the issues worth looking at; filter the card grid to them.
-      const ids = res.answer?.highlight_issue_ids;
-      onHighlight?.(ids?.length ? ids.map(String) : null);
     } catch (err) {
       setMessages((m) => [...m, { role: 'bot', error: err.message }]);
     } finally {
@@ -58,17 +67,8 @@ export default function CopilotChat({ onHighlight, onClose }) {
 
   return (
     <aside className="dash-chat">
-      <header className="chat-head">
-        <div>
-          <div className="chat-title">✨ Copilot</div>
-          <div className="chat-sub">Ask about your ward — Bangla or English</div>
-        </div>
-        {onClose && (
-          <button type="button" className="chat-close" onClick={onClose} aria-label="Close chat">
-            ✕
-          </button>
-        )}
-      </header>
+      {/* No header of its own: the page that hosts this already titles it, and
+          two stacked headings saying the same thing is just lost space. */}
 
       <div className="chat-msgs no-scrollbar" ref={scrollRef}>
         {messages.length === 0 && (
@@ -92,6 +92,11 @@ export default function CopilotChat({ onHighlight, onClose }) {
                   <>
                     {m.bn && <div className="bn">{m.bn}</div>}
                     {m.en && <div className="en">{m.en}</div>}
+                    {m.ids?.length > 0 && (
+                      <button type="button" className="chat-jump" onClick={() => onHighlight?.(m.ids)}>
+                        Show {m.ids.length} on the map →
+                      </button>
+                    )}
                   </>
                 )}
               </div>

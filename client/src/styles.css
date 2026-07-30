@@ -495,7 +495,12 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   min-height: 0;
 }
 .dash-main { position: relative; min-width: 0; }
-.map { position: absolute; inset: 0; }
+/* TWO classes, deliberately. maplibre-gl.css is imported after this file
+   (main.jsx) and sets `.maplibregl-map { position: relative }`, which wins over a
+   single-class `.map { position: absolute }` on load order alone — leaving the
+   container 0px tall and the map invisible with no error anywhere. MapLibre adds
+   its class to our element, so matching both outranks it. */
+.map.maplibregl-map { position: absolute; inset: 0; }
 
 .side-head { padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .side-head h2 { margin: 0 0 3px; font-size: 15px; }
@@ -890,7 +895,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 /* ==================================================== mobile chrome */
 /* Phone-only top bar + bottom tab nav. Hidden on desktop; shown at <=720px,
    where the left rail is removed (see the mobile media block at the end). */
-.mobile-topbar, .mobile-nav, .d2-newreport, .chat-close { display: none; }
+.mobile-topbar, .mobile-nav, .d2-newreport { display: none; }
 
 .mobile-topbar {
   align-items: center;
@@ -995,21 +1000,6 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   text-decoration: none;
 }
 
-/* chat header close (mobile only) */
-.chat-close {
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex: none;
-  border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 9px;
-  color: var(--ink-dim);
-  font-size: 14px;
-  cursor: pointer;
-}
-
 /* ==================================================== dashboard (light v2) */
 /* Hide scrollbars while keeping the area scrollable. */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -1024,22 +1014,45 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   --box: #f7f6f3;
   position: relative;                 /* containing block for the issue drawer */
   display: grid;
-  grid-template-columns: 216px 1fr 366px;
+  /* Rail · work queue · map. The queue is a list of rows and stops being useful
+     past ~430px, so the remaining width goes to the map — which is the thing the
+     console exists to show. */
+  grid-template-columns: 216px minmax(360px, 430px) 1fr;
   height: 100vh;
   background: #fff;
   color: var(--ink);
   overflow: hidden;
 }
+/* The Copilot page uses the same shell without a third column. The conversation
+   is centred and capped: a chat bubble stretched across 1300px of screen is a
+   line nobody can read back. */
+.copilot-shell { grid-template-columns: 216px 1fr; }
+.copilot-shell .chat-msgs,
+.copilot-shell .chat-suggest,
+.copilot-shell .chat-form { width: 100%; max-width: 880px; margin-inline: auto; }
 
 /* ---- centre column ---- */
 .dash2-main { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
 .dash2-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 2px 22px 10px; }
 .dash2-head h2 { margin: 0 0 3px; font-size: 17px; color: var(--ink); }
 .dash2-head p { margin: 0; font-size: 12px; color: var(--ink-dim); }
-.d2-toggle { display: inline-flex; flex: none; gap: 2px; padding: 3px; background: var(--box); border: 1px solid var(--line); border-radius: 10px; }
-.d2-toggle button { border: none; background: transparent; color: var(--ink-dim); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: 8px; cursor: pointer; }
-.d2-toggle button.active { background: var(--crimson); color: #fff; }
-.d2-map { flex: 1; min-height: 0; position: relative; margin: 4px 22px 22px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+/* Phone only — on one column the map cannot sit beside the queue, so it opens
+   over it. Revealed by the ≤720px block at the end of this file. */
+.d2-mapbtn, .d2-mapclose { display: none; }
+.d2-mapbtn {
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--box);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
 .dash2 .live-badge { color: var(--ink-dim); }
 .dash2 .live-badge .dot { background: #c9ccd1; }
 .dash2 .live-badge.on .dot { background: var(--brand-bright); }
@@ -1065,60 +1078,60 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 }
 .d2-clear:hover { border-color: var(--crimson); color: var(--crimson); }
 
-/* ---- square issue cards ---- */
+/* ---- the work queue: a scrolling list of cards ---- */
 .d2-cards {
   flex: 1;
   overflow-y: auto;
   padding: 4px 22px 26px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(206px, 1fr));
-  gap: 14px;
-  align-content: start;
-}
-.d2-card {
-  /* Natural height (cards in a row stretch to match) rather than a forced
-     square, so content never clips or crowds. Grid keeps them uniform. */
-  min-height: 190px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+.d2-card {
+  /* A row, not a tile: height follows content, and the column is narrow enough
+     that a fixed height would only add whitespace. */
+  display: flex;
+  flex-direction: column;
+  flex: none;
   text-align: left;
   background: var(--box);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 14px;
+  border-radius: 16px;
+  padding: 12px 14px;
   cursor: pointer;
   overflow: hidden;
   font: inherit;
   color: var(--ink);
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.d2-card:hover { border-color: #dcdad6; box-shadow: 0 8px 20px rgba(20, 24, 29, 0.09); transform: translateY(-2px); }
+.d2-card:hover { border-color: #dcdad6; box-shadow: 0 6px 16px rgba(20, 24, 29, 0.08); }
 .d2-card.selected { border-color: var(--crimson); box-shadow: 0 0 0 3px rgba(232, 26, 77, 0.15); }
 .d2-card.flash { animation: d2flash 2.4s ease-out; }
 @keyframes d2flash { 0%, 30% { background: rgba(232, 26, 77, 0.14); } 100% { background: var(--box); } }
 
-.d2-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.d2-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
 .d2-card-summary {
   margin: 0;
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.45;
   color: var(--ink);
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* margin-top:auto anchors the meta+foot to the bottom of a stretched card. */
-.d2-card-meta { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 10px; font-size: 11px; color: var(--ink-dim); }
+/* One line of metadata rather than a stack: rows are short, so location and
+   department read faster side by side than stacked. */
+.d2-card-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 11px; color: var(--ink-dim); }
 .d2-card-meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.d2-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 8px; }
+.d2-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; }
 
 .d2-chip { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #fff; border: 1px solid var(--line); color: var(--ink-dim); white-space: nowrap; }
 .d2-chip.count { background: rgba(232, 26, 77, 0.10); border-color: rgba(232, 26, 77, 0.35); color: var(--crimson-dark); font-weight: 600; }
 .d2-sla { font-size: 10.5px; color: var(--ink-dim); }
 .d2-sla.overdue { color: var(--sev-5); font-weight: 600; }
 
-.d2-empty { grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--ink-dim); font-size: 14px; }
+.d2-empty { padding: 40px 20px; text-align: center; color: var(--ink-dim); font-size: 14px; }
 
 /* Reports whose coordinates fall outside every corporation boundary. Stated
    plainly so the console never quietly under-reports the city's workload. */
@@ -1132,21 +1145,40 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   font-size: 12.5px;
 }
 
-/* ---- right column (chat + drawer share it) ---- */
+/* ---- right column (map + drawer share it) ---- */
 .dash2-aside { position: relative; min-width: 0; }
+.d2-mapcol {
+  position: relative;
+  height: 100vh;
+  border-left: 1px solid var(--line);
+  background: var(--box);
+}
+.d2-mapclose {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* The chat: its own page now (.copilot-shell), no longer a console column. */
 .dash-chat {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
   background: #fff;
-  border-left: 1px solid var(--line);
-  box-shadow: -10px 0 34px rgba(20, 24, 29, 0.05);
 }
-.chat-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
-.chat-title { font-size: 16px; font-weight: 700; color: var(--ink); }
-.chat-sub { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
-
 .chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .chat-greeting { margin: auto 0; text-align: center; color: var(--ink-dim); }
 .chat-greeting-glyph { font-size: 30px; margin-bottom: 6px; }
@@ -1161,6 +1193,22 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .chat-bubble .bn { font-family: var(--font-bn); }
 .chat-bubble .en { color: var(--ink-dim); font-size: 12.5px; margin-top: 5px; }
 .chat-err { color: var(--sev-5); }
+
+/* Carries the issues Gemma named over to the work queue. */
+.chat-jump {
+  display: inline-block;
+  margin-top: 9px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--crimson);
+  background: #fff;
+  color: var(--crimson);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chat-jump:hover { background: var(--crimson); color: #fff; }
 
 .chat-bubble.typing { display: inline-flex; gap: 4px; align-items: center; }
 .chat-bubble.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-dim); animation: chat-typing 1.2s infinite; }
@@ -1229,7 +1277,8 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 
 /* ---- responsive ---- */
 @media (max-width: 1080px) {
-  .dash2 { grid-template-columns: 66px 1fr 320px; }
+  .dash2 { grid-template-columns: 66px minmax(320px, 400px) 1fr; }
+  .copilot-shell { grid-template-columns: 66px 1fr; }
   .dash2 .sidebar-link { justify-content: center; padding: 12px 0; }
   .dash2 .sidebar-link .lbl { display: none; }
   .dash2 .sidebar-logo { width: 48px; }
@@ -1240,7 +1289,6 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   /* show phone chrome, hide the desktop rail + bell/language bar */
   .mobile-topbar { display: flex; }
   .mobile-nav { display: flex; }
-  .chat-close { display: flex; }
   .sidebar { display: none; }
   .report-topbar { display: none; }
 
@@ -1251,29 +1299,28 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   .placeholder { margin-top: 12vh; padding-bottom: 90px; }
 
   /* ---- dashboard ---- */
-  .dash2 { grid-template-columns: 1fr; height: auto; min-height: 100vh; overflow: visible; }
+  .dash2, .copilot-shell { grid-template-columns: 1fr; height: auto; min-height: 100vh; overflow: visible; }
   .dash2-main { overflow: visible; padding-bottom: 88px; }
   .d2-newreport { display: flex; }
   .dash2-head { flex-direction: column; align-items: stretch; gap: 10px; }
-  .d2-toggle { align-self: flex-start; }
+  .d2-mapbtn { display: inline-flex; align-self: flex-start; }
   .d2-stats { flex-wrap: wrap; }
   .d2-stat { flex: 1 1 calc(50% - 5px); }         /* two tiles per row */
-  .d2-cards { grid-template-columns: 1fr; overflow: visible; }  /* single-column list */
-  .d2-card { min-height: auto; }
-  .d2-map { height: 62vh; }
+  .d2-cards { overflow: visible; }
+  /* The chat has no column to fill on a phone, so give it a floor. */
+  .copilot-shell .dash-chat { min-height: 74vh; }
 
-  /* chat + issue drawer become full-screen overlays */
-  .dash2-aside { display: contents; }
-  .dash-chat {
+  /* map + issue drawer become full-screen overlays */
+  .dash2-aside { display: block; }
+  .d2-mapcol {
     position: fixed;
     inset: 0;
     z-index: 45;
-    height: 100vh;
     transform: translateX(100%);
     transition: transform 0.25s ease;
     border-left: none;
-    box-shadow: none;
   }
-  .dash2-aside.chat-open .dash-chat { transform: none; }
+  .dash2-aside.map-open .d2-mapcol { transform: none; }
+  .d2-mapclose { display: flex; }
   .dash2 .drawer { position: fixed; inset: 0; width: auto; z-index: 50; }
 }

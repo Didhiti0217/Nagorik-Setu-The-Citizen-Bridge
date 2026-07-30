@@ -9,6 +9,7 @@ import MyComplaintsPage from './pages/MyComplaints.jsx';
 import AdminLoginPage from './pages/AdminLogin.jsx';
 import InviteAcceptPage from './pages/InviteAccept.jsx';
 import DashboardPage from './pages/Dashboard.jsx';
+import CopilotPage from './pages/Copilot.jsx';
 import TransparencyPage from './pages/Transparency.jsx';
 
 function Nav() {
@@ -154,6 +155,14 @@ export default function App() {
           element={
             <Require role="admin">
               <DashboardPage />
+            </Require>
+          }
+        />
+        <Route
+          path="/copilot"
+          element={
+            <Require role="admin">
+              <CopilotPage />
             </Require>
           }
         />

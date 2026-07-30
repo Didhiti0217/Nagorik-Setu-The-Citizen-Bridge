@@ -10,10 +10,14 @@
  * because a corporation *is* a jurisdiction, so a pin and its ticket can never
  * disagree about which city they belong to.
  *
- * Layout: the crimson nav rail (left), a scrollable grid of square issue cards
- * (centre), and the Copilot chat (right). Live updates arrive over SSE, so a
- * report submitted on a phone lands here without a refresh — the new card flashes
- * and scrolls into view.
+ * Layout: the crimson nav rail (left), the work queue as a scrollable list of
+ * cards (centre), and the map (right) — always visible, never behind a toggle,
+ * because where the city's problems physically are is the thing this console
+ * exists to show. The Copilot moved to its own page (pages/Copilot.jsx) and
+ * hands its results back here through router state.
+ *
+ * Live updates arrive over SSE, so a report submitted on a phone lands here
+ * without a refresh — the new card flashes and scrolls into view.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -24,7 +28,6 @@ import MobileTopbar from '../components/MobileTopbar.jsx';
 import MobileNav from '../components/MobileNav.jsx';
 import MapView from '../components/MapView.jsx';
 import IssueDrawer from '../components/IssueDrawer.jsx';
-import CopilotChat from '../components/CopilotChat.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
 import { useSession } from '../lib/session.js';
@@ -75,8 +78,9 @@ export default function DashboardPage() {
   const [flashId, setFlashId] = useState(null);
   const [live, setLive] = useState(false);
   const [highlightIds, setHighlightIds] = useState(null);
-  const [view, setView] = useState('cards'); // 'cards' | 'map'
-  const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  // Phone only: the map has no column of its own below 720px, so it opens as a
+  // full-screen overlay. Ignored by the desktop layout, where it is always shown.
+  const [mapOpen, setMapOpen] = useState(false);
   const queueRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,10 +92,13 @@ export default function DashboardPage() {
     navigate('/admin/login', { replace: true });
   }, [signOut, navigate]);
 
-  // The mobile bottom-nav Chat button routes here with this state to pop the chat.
+  // The Copilot page sends the issues Gemma named back here to filter the queue.
+  // Router state rather than a query string: these are opaque ids that mean
+  // nothing in a URL someone might share, and they should not survive a reload.
   useEffect(() => {
-    if (location.state?.openChat) setMobileChatOpen(true);
-  }, [location.state?.openChat]);
+    const ids = location.state?.highlight;
+    if (ids?.length) setHighlightIds(ids.map(String));
+  }, [location.state?.highlight]);
 
   // Municipal officers work in English; the citizen app stays Bangla.
   useEffect(() => { setLang('en'); }, [setLang]);
@@ -207,26 +214,11 @@ export default function DashboardPage() {
               </span>
             </p>
           </div>
-          <div className="d2-toggle" role="tablist" aria-label="View">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === 'cards'}
-              className={view === 'cards' ? 'active' : ''}
-              onClick={() => setView('cards')}
-            >
-              ▦ Cards
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={view === 'map'}
-              className={view === 'map' ? 'active' : ''}
-              onClick={() => setView('map')}
-            >
-              ◍ Map
-            </button>
-          </div>
+          {/* Phone only (CSS hides it above 720px): on a single column the map
+              has nowhere to sit, so it opens over everything. */}
+          <button type="button" className="d2-mapbtn" onClick={() => setMapOpen(true)}>
+            ◍ {t('showMap')}
+          </button>
         </div>
 
         <div className="d2-stats">
@@ -254,36 +246,23 @@ export default function DashboardPage() {
           </button>
         )}
 
-        {view === 'cards' ? (
-          <div className="d2-cards no-scrollbar" ref={queueRef}>
-            {loading && <div className="d2-empty">Loading issues…</div>}
-            {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
-            {!loading && !error && visible.length === 0 && (
-              <div className="d2-empty">{highlightIds ? 'No issues match.' : t('noIssuesHere')}</div>
-            )}
-            {visible.map((issue) => (
-              <IssueCard
-                key={issue._id}
-                issue={issue}
-                categoryLabel={category}
-                selected={issue._id === selectedId}
-                flashing={issue._id === flashId}
-                onClick={() => setSelectedId(issue._id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="d2-map">
-            <MapView
-              issues={visible}
-              selectedId={selectedId}
-              flashId={flashId}
-              onSelect={setSelectedId}
-              center={corporation.center}
-              zoom={corporation.zoom}
+        <div className="d2-cards no-scrollbar" ref={queueRef}>
+          {loading && <div className="d2-empty">Loading issues…</div>}
+          {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
+          {!loading && !error && visible.length === 0 && (
+            <div className="d2-empty">{highlightIds ? 'No issues match.' : t('noIssuesHere')}</div>
+          )}
+          {visible.map((issue) => (
+            <IssueCard
+              key={issue._id}
+              issue={issue}
+              categoryLabel={category}
+              selected={issue._id === selectedId}
+              flashing={issue._id === flashId}
+              onClick={() => setSelectedId(issue._id)}
             />
-          </div>
-        )}
+          ))}
+        </div>
 
         {/* Say out loud when reports fall outside every boundary we know, rather
             than quietly under-reporting the city's workload. */}
@@ -294,11 +273,23 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Right column: the Copilot chat, with the issue drawer sliding in over
-          it when a card is opened. The chat stays mounted underneath so its
-          conversation survives closing the drawer. */}
-      <aside className={`dash2-aside${mobileChatOpen ? ' chat-open' : ''}`}>
-        <CopilotChat onHighlight={setHighlightIds} onClose={() => setMobileChatOpen(false)} />
+      {/* Right column: the map, with the issue drawer sliding in over it when a
+          card is opened. The map stays mounted underneath — it is created once
+          (MapView.jsx) and re-mounting it would re-download every tile. */}
+      <aside className={`dash2-aside${mapOpen ? ' map-open' : ''}`}>
+        <div className="d2-mapcol">
+          <MapView
+            issues={visible}
+            selectedId={selectedId}
+            flashId={flashId}
+            onSelect={setSelectedId}
+            center={corporation.center}
+            zoom={corporation.zoom}
+          />
+          <button type="button" className="d2-mapclose" onClick={() => setMapOpen(false)}>
+            ✕
+          </button>
+        </div>
         {selected && <IssueDrawer issue={selected} onClose={() => setSelectedId(null)} />}
       </aside>
 
