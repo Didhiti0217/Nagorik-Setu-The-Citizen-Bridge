@@ -81,20 +81,6 @@ export default function IssueDrawer({ issue, onClose }) {
         </section>
       )}
 
-      {issue.mergeReasons?.length > 0 && (
-        <section>
-          <h4>Why {issue.reportCount} reports became one issue</h4>
-          {issue.mergeReasons.map((m, i) => (
-            <div className="merge-item" key={i}>
-              “{m.reason}”
-              {m.confidence != null && (
-                <span style={{ opacity: 0.7 }}> · {Math.round(m.confidence * 100)}% confident</span>
-              )}
-            </div>
-          ))}
-        </section>
-      )}
-
       {issue.evidencePhotos?.length > 0 && (
         <section>
           <h4>Photo evidence · Gemma's read</h4>

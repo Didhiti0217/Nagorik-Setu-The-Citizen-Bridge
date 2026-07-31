@@ -1112,10 +1112,9 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   flex: 1;
   overflow-y: auto;
   padding: 4px 22px 26px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 12px;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .d2-card {
   /* A row, not a tile: height follows content, and the column is narrow enough
@@ -1335,7 +1334,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   .d2-toggle { align-self: flex-start; }
   .d2-stats { flex-wrap: wrap; }
   .d2-stat { flex: 1 1 calc(50% - 5px); }         /* two tiles per row */
-  .d2-cards { overflow: visible; grid-template-columns: 1fr; }
+  .d2-cards { overflow: visible; }
   .d2-map { height: 70vh; margin: 4px 16px 16px; }
   /* The Copilot page's chat needs a floor on a phone (no column to fill). */
   .copilot-shell .dash-chat { min-height: 74vh; }
@@ -1387,10 +1386,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   .dash2-head p { font-size: clamp(12px, 0.95vw, 16px); }
   .d2-stat b { font-size: clamp(22px, 1.72vw, 34px); }
   .d2-stat span { font-size: clamp(10px, 0.78vw, 13px); }
-  .d2-cards {
-    grid-template-columns: repeat(auto-fill, minmax(clamp(206px, 16vw, 300px), 1fr));
-    gap: clamp(14px, 1.2vw, 24px);
-  }
+  .d2-cards { gap: clamp(10px, 0.9vw, 16px); }
   .d2-card-summary { font-size: clamp(13px, 1.02vw, 16px); }
 
   /* ---- copilot chat ---- */
