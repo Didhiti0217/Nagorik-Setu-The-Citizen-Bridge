@@ -30,6 +30,7 @@ import MobileTopbar from '../components/MobileTopbar.jsx';
 import MobileNav from '../components/MobileNav.jsx';
 import MapView from '../components/MapView.jsx';
 import IssueDrawer from '../components/IssueDrawer.jsx';
+import CopilotChat from '../components/CopilotChat.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
 import { useSession } from '../lib/session.js';
@@ -73,9 +74,7 @@ export default function DashboardPage() {
   const [flashId, setFlashId] = useState(null);
   const [live, setLive] = useState(false);
   const [highlightIds, setHighlightIds] = useState(null);
-  // Phone only: the map has no column of its own below 720px, so it opens as a
-  // full-screen overlay. Ignored by the desktop layout, where it is always shown.
-  const [mapOpen, setMapOpen] = useState(false);
+  const [view, setView] = useState('cards'); // centre column: 'cards' | 'map'
   const queueRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -209,11 +208,26 @@ export default function DashboardPage() {
               </span>
             </p>
           </div>
-          {/* Phone only (CSS hides it above 720px): on a single column the map
-              has nowhere to sit, so it opens over everything. */}
-          <button type="button" className="d2-mapbtn" onClick={() => setMapOpen(true)}>
-            ◍ {t('showMap')}
-          </button>
+          <div className="d2-toggle" role="tablist" aria-label="View">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'cards'}
+              className={view === 'cards' ? 'active' : ''}
+              onClick={() => setView('cards')}
+            >
+              ▦ Cards
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'map'}
+              className={view === 'map' ? 'active' : ''}
+              onClick={() => setView('map')}
+            >
+              ◍ Map
+            </button>
+          </div>
         </div>
 
         <div className="d2-stats">
@@ -241,42 +255,42 @@ export default function DashboardPage() {
           </button>
         )}
 
-        <div className="d2-cards no-scrollbar" ref={queueRef}>
-          {loading && <div className="d2-empty">Loading issues…</div>}
-          {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
-          {!loading && !error && visible.length === 0 && (
-            <div className="d2-empty">{highlightIds ? 'No issues match.' : t('noIssuesHere')}</div>
-          )}
-          {visible.map((issue) => (
-            <IssueCard
-              key={issue._id}
-              issue={issue}
-              categoryLabel={category}
-              selected={issue._id === selectedId}
-              flashing={issue._id === flashId}
-              onClick={() => setSelectedId(issue._id)}
+        {view === 'cards' ? (
+          <div className="d2-cards no-scrollbar" ref={queueRef}>
+            {loading && <div className="d2-empty">Loading issues…</div>}
+            {error && <div className="d2-empty">Could not load issues.<br />{error}</div>}
+            {!loading && !error && visible.length === 0 && (
+              <div className="d2-empty">{highlightIds ? 'No issues match.' : t('noIssuesHere')}</div>
+            )}
+            {visible.map((issue) => (
+              <IssueCard
+                key={issue._id}
+                issue={issue}
+                categoryLabel={category}
+                selected={issue._id === selectedId}
+                flashing={issue._id === flashId}
+                onClick={() => setSelectedId(issue._id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="d2-map">
+            <MapView
+              issues={visible}
+              selectedId={selectedId}
+              flashId={flashId}
+              onSelect={setSelectedId}
+              center={corporation.center}
+              zoom={corporation.zoom}
             />
-          ))}
-        </div>
+          </div>
+        )}
       </main>
 
-      {/* Right column: the map, with the issue drawer sliding in over it when a
-          card is opened. The map stays mounted underneath — it is created once
-          (MapView.jsx) and re-mounting it would re-download every tile. */}
-      <aside className={`dash2-aside${mapOpen ? ' map-open' : ''}`}>
-        <div className="d2-mapcol">
-          <MapView
-            issues={visible}
-            selectedId={selectedId}
-            flashId={flashId}
-            onSelect={setSelectedId}
-            center={corporation.center}
-            zoom={corporation.zoom}
-          />
-          <button type="button" className="d2-mapclose" onClick={() => setMapOpen(false)}>
-            ✕
-          </button>
-        </div>
+      {/* Right column: the Copilot chat, with the issue drawer sliding in over it
+          when a card is opened. The chat stays mounted underneath. */}
+      <aside className="dash2-aside">
+        <CopilotChat onHighlight={setHighlightIds} showHeader />
         {selected && <IssueDrawer issue={selected} onClose={() => setSelectedId(null)} />}
       </aside>
 

@@ -1034,10 +1034,8 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   --box: #f7f6f3;
   position: relative;                 /* containing block for the issue drawer */
   display: grid;
-  /* Rail · work queue · map. The queue is a list of rows and stops being useful
-     past ~430px, so the remaining width goes to the map — which is the thing the
-     console exists to show. */
-  grid-template-columns: 216px minmax(360px, 430px) 1fr;
+  /* Thin rail · work queue (cards or map, toggled) · Copilot chat. */
+  grid-template-columns: 188px 1fr minmax(360px, 420px);
   height: 100vh;
   background: #fff;
   color: var(--ink);
@@ -1046,10 +1044,21 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 /* The Copilot page uses the same shell without a third column. The conversation
    is centred and capped: a chat bubble stretched across 1300px of screen is a
    line nobody can read back. */
-.copilot-shell { grid-template-columns: 216px 1fr; }
+.copilot-shell { grid-template-columns: 188px 1fr; }
 .copilot-shell .chat-msgs,
 .copilot-shell .chat-suggest,
 .copilot-shell .chat-form { width: 100%; max-width: 880px; margin-inline: auto; }
+
+/* Thinner rail on the console (the citizen report keeps the wider 216px one). */
+.dash2 .sidebar-logo { width: 150px; }
+
+/* Cards / Map toggle in the header. */
+.d2-toggle { display: inline-flex; flex: none; gap: 2px; padding: 3px; background: var(--box); border: 1px solid var(--line); border-radius: 10px; }
+.d2-toggle button { border: none; background: transparent; color: var(--ink-dim); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: 8px; cursor: pointer; }
+.d2-toggle button.active { background: var(--crimson); color: #fff; }
+
+/* Centre map view (toggled). Fills the remaining height of the centre column. */
+.d2-map { flex: 1; min-height: 0; position: relative; margin: 4px 22px 22px; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
 
 /* ---- centre column ---- */
 .dash2-main { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
@@ -1103,9 +1112,10 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   flex: 1;
   overflow-y: auto;
   padding: 4px 22px 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  align-content: start;
 }
 .d2-card {
   /* A row, not a tile: height follows content, and the column is narrow enough
@@ -1151,8 +1161,16 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 
 .d2-empty { padding: 40px 20px; text-align: center; color: var(--ink-dim); font-size: 14px; }
 
-/* ---- right column (map + drawer share it) ---- */
-.dash2-aside { position: relative; min-width: 0; }
+/* ---- right column (chat + drawer share it) ---- */
+.dash2-aside {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border-left: 1px solid var(--line);
+  background: #fff;
+}
 .d2-mapcol {
   position: relative;
   height: 100vh;
@@ -1176,7 +1194,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   cursor: pointer;
 }
 
-/* The chat: its own page now (.copilot-shell), no longer a console column. */
+/* The chat: the console's right column, and also its own page (.copilot-shell). */
 .dash-chat {
   display: flex;
   flex-direction: column;
@@ -1185,6 +1203,9 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   min-height: 0;
   background: #fff;
 }
+.chat-head { flex: none; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.chat-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+.chat-sub { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
 .chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .chat-greeting { margin: auto 0; text-align: center; color: var(--ink-dim); }
 .chat-greeting-glyph { font-size: 30px; margin-bottom: 6px; }
@@ -1285,7 +1306,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 
 /* ---- responsive ---- */
 @media (max-width: 1080px) {
-  .dash2 { grid-template-columns: 66px minmax(320px, 400px) 1fr; }
+  .dash2 { grid-template-columns: 66px 1fr minmax(320px, 400px); }
   .copilot-shell { grid-template-columns: 66px 1fr; }
   .dash2 .sidebar-link { justify-content: center; padding: 12px 0; }
   .dash2 .sidebar-link .lbl { display: none; }
@@ -1311,25 +1332,18 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   .dash2-main { overflow: visible; padding-bottom: 88px; }
   .d2-newreport { display: flex; }
   .dash2-head { flex-direction: column; align-items: stretch; gap: 10px; }
-  .d2-mapbtn { display: inline-flex; align-self: flex-start; }
+  .d2-toggle { align-self: flex-start; }
   .d2-stats { flex-wrap: wrap; }
   .d2-stat { flex: 1 1 calc(50% - 5px); }         /* two tiles per row */
-  .d2-cards { overflow: visible; }
-  /* The chat has no column to fill on a phone, so give it a floor. */
+  .d2-cards { overflow: visible; grid-template-columns: 1fr; }
+  .d2-map { height: 70vh; margin: 4px 16px 16px; }
+  /* The Copilot page's chat needs a floor on a phone (no column to fill). */
   .copilot-shell .dash-chat { min-height: 74vh; }
 
-  /* map + issue drawer become full-screen overlays */
-  .dash2-aside { display: block; }
-  .d2-mapcol {
-    position: fixed;
-    inset: 0;
-    z-index: 45;
-    transform: translateX(100%);
-    transition: transform 0.25s ease;
-    border-left: none;
-  }
-  .dash2-aside.map-open .d2-mapcol { transform: none; }
-  .d2-mapclose { display: flex; }
+  /* On phones the console's chat is a page of its own (bottom nav → Copilot), so
+     hide the side panel here; the issue drawer still opens full-screen. */
+  .dash2-aside { display: contents; }
+  .dash2-aside .dash-chat { display: none; }
   .dash2 .drawer { position: fixed; inset: 0; width: auto; z-index: 50; }
 }
 
@@ -1367,8 +1381,8 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 
   /* (admin sign-in scales itself via clamp() in its own rules above) */
 
-  /* ---- corporation console: bigger rail, chat, cards and text ---- */
-  .dash2 { grid-template-columns: clamp(216px, 17vw, 320px) 1fr clamp(366px, 28vw, 560px); }
+  /* ---- corporation console: bigger chat, cards and text (rail stays thin) ---- */
+  .dash2 { grid-template-columns: clamp(188px, 14vw, 260px) 1fr clamp(360px, 26vw, 480px); }
   .dash2-head h2 { font-size: clamp(17px, 1.33vw, 26px); }
   .dash2-head p { font-size: clamp(12px, 0.95vw, 16px); }
   .d2-stat b { font-size: clamp(22px, 1.72vw, 34px); }

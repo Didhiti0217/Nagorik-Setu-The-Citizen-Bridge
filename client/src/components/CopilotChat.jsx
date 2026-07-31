@@ -26,7 +26,7 @@ const SUGGESTIONS = [
   'Show me all life-threatening issues still open',
 ];
 
-export default function CopilotChat({ onHighlight }) {
+export default function CopilotChat({ onHighlight, showHeader }) {
   const [messages, setMessages] = useState([]);
   const [question, setQuestion] = useState('');
   const [busy, setBusy] = useState(false);
@@ -67,8 +67,14 @@ export default function CopilotChat({ onHighlight }) {
 
   return (
     <aside className="dash-chat">
-      {/* No header of its own: the page that hosts this already titles it, and
-          two stacked headings saying the same thing is just lost space. */}
+      {/* On the console the chat is a side panel and titles itself; the Copilot
+          page passes no header because the page already titles it. */}
+      {showHeader && (
+        <header className="chat-head">
+          <div className="chat-title">✨ Copilot</div>
+          <div className="chat-sub">Ask about your ward — Bangla or English</div>
+        </header>
+      )}
 
       <div className="chat-msgs no-scrollbar" ref={scrollRef}>
         {messages.length === 0 && (
