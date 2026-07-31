@@ -49,6 +49,29 @@ export function createPipeline(deps) {
   const { findNearbyIssues, createIssue, updateIssue, updateReport, publish = () => {} } = deps;
 
   /**
+   * The admin-facing record of one photo: where it lives on disk, plus Gemma's
+   * Stage 3 read of it. Returns null for a text-only report so callers can
+   * `if (photoEntry)` without checking `report.photoPath` twice.
+   *
+   * Kept even when `supports_claim` is false — a photo that does NOT support
+   * its own claim is exactly the thing an officer needs to see, not information
+   * to discard.
+   */
+  function evidencePhotoEntry(report, evidence) {
+    if (!report.photoPath) return null;
+    return {
+      reportId: report._id,
+      photoPath: report.photoPath,
+      supportsClaim: evidence.data?.supports_claim ?? null,
+      evidenceConfidence: evidence.data?.evidence_confidence ?? null,
+      visibleElements: evidence.data?.visible_elements ?? [],
+      mismatchReason: evidence.data?.mismatch_reason ?? null,
+      imageQuality: evidence.data?.image_quality ?? null,
+      createdAt: new Date(),
+    };
+  }
+
+  /**
    * Process one already-persisted report. Never throws — a failure is recorded
    * on the report and surfaced in the UI rather than lost. Callers fire this
    * without awaiting.
@@ -111,6 +134,7 @@ export function createPipeline(deps) {
 
       let issue;
       let merged = false;
+      const photoEntry = evidencePhotoEntry(report, evidence);
 
       if (dupe.data.is_duplicate && nearby[dupe.data.candidate_index]) {
         // --- merge into the existing physical problem ---------------------
@@ -132,6 +156,9 @@ export function createPipeline(deps) {
               reason: dupe.data.reason,
               confidence: dupe.data.confidence,
             },
+            // A merged report can bring its own photo — e.g. the 3rd citizen to
+            // report a pothole photographs it from a clearer angle than the 1st.
+            ...(photoEntry ? { evidencePhotos: photoEntry } : {}),
           },
         });
       } else {
@@ -148,6 +175,7 @@ export function createPipeline(deps) {
           department: triage.data.department,
           estimatedAffectedPeople: triage.data.estimated_affected_people,
           evidenceConfidence: evidence.data?.evidence_confidence ?? null,
+          evidencePhotos: photoEntry ? [photoEntry] : [],
           reportCount: 1,
           priorityWeight: computePriorityWeight({
             severity: triage.data.severity,

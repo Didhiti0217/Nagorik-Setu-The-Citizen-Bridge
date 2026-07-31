@@ -8,7 +8,9 @@
  * Scoped to the signed-in city corporation: an officer in Gazipur must not be
  * looking at Dhaka South's workload. Scoping is geographic (lib/corporations.js)
  * because a corporation *is* a jurisdiction, so a pin and its ticket can never
- * disagree about which city they belong to.
+ * disagree about which city they belong to. Every issue resolves to exactly
+ * one corporation — contained by its bbox, or nearest by centre otherwise — so
+ * a citizen's report can never be invisible to every console at once.
  *
  * Layout: the crimson nav rail (left), the work queue as a scrollable list of
  * cards (centre), and the map (right) — always visible, never behind a toggle,
@@ -31,11 +33,9 @@ import IssueDrawer from '../components/IssueDrawer.jsx';
 import { getIssues, subscribeToStream } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
 import { useSession } from '../lib/session.js';
-import { corpName, containsPoint, filterIssues } from '../lib/corporations.js';
+import { corpName, assignCorporation, filterIssues } from '../lib/corporations.js';
 
 function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
-  const sla = issue.slaDueAt ? new Date(issue.slaDueAt) : null;
-  const overdue = sla && sla < new Date();
   return (
     <button
       type="button"
@@ -57,11 +57,6 @@ function IssueCard({ issue, selected, flashing, onClick, categoryLabel }) {
 
       <div className="d2-card-foot">
         {issue.dispatchBrief?.priority && <span className="d2-chip">{issue.dispatchBrief.priority}</span>}
-        {sla && (
-          <span className={`d2-sla${overdue ? ' overdue' : ''}`}>
-            SLA {overdue ? 'overdue' : sla.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        )}
       </div>
     </button>
   );
@@ -134,7 +129,7 @@ export default function DashboardPage() {
 
       // ...but only announce it if it landed in the console we're looking at.
       // Flashing a card an officer cannot see would be worse than silence.
-      if (!containsPoint(corporation, incoming?.centroid?.coordinates)) return;
+      if (assignCorporation(incoming?.centroid?.coordinates)?.id !== corporation.id) return;
       setFlashId(incoming._id);
       // Scrolling the new card into view makes the update legible on camera.
       requestAnimationFrame(() => queueRef.current?.scrollTo({ top: 0, behavior: 'smooth' }));
@@ -144,7 +139,7 @@ export default function DashboardPage() {
   }, [corporation]);
 
   /* ---- jurisdiction scoping ---- */
-  const { inside: scoped, unassigned } = useMemo(
+  const { inside: scoped } = useMemo(
     () => filterIssues(issues, corporation),
     [issues, corporation],
   );
@@ -263,14 +258,6 @@ export default function DashboardPage() {
             />
           ))}
         </div>
-
-        {/* Say out loud when reports fall outside every boundary we know, rather
-            than quietly under-reporting the city's workload. */}
-        {unassigned.length > 0 && (
-          <p className="d2-unassigned">
-            ⚠ {unassigned.length} {t('unassignedNote')}
-          </p>
-        )}
       </main>
 
       {/* Right column: the map, with the issue drawer sliding in over it when a

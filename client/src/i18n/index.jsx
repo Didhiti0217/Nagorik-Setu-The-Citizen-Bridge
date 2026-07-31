@@ -110,7 +110,6 @@ export const STRINGS = {
     signedInAs: 'প্রশাসক',
     signOut: 'লগ আউট',
     noIssuesHere: 'এই কর্পোরেশনে এখনো কোনো সমস্যা নেই',
-    unassignedNote: 'টি রিপোর্ট কোনো কর্পোরেশনের সীমার বাইরে',
   },
   en: {
     appName: 'Nagorik Setu',
@@ -203,7 +202,6 @@ export const STRINGS = {
     signedInAs: 'Admin',
     signOut: 'Sign out',
     noIssuesHere: 'No issues in this corporation yet',
-    unassignedNote: 'report(s) fall outside every corporation boundary',
   },
 };
 

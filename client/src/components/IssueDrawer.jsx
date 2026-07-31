@@ -1,20 +1,24 @@
 /**
  * Issue detail — the dispatch view.
  *
- * The two things here a normal complaint dashboard cannot show:
+ * Three things here a normal complaint dashboard cannot show:
  *   - the Gemma-generated work order (crew, equipment, SLA, bilingual brief)
  *   - WHY each duplicate report was merged, in plain language
+ *   - every citizen's photo, next to Gemma's own read of it (Stage 3), not
+ *     just a single confidence number
  *
  * Surfacing the merge reasons is deliberate. Deduplication is the highest-value
  * and highest-risk stage: a wrong merge buries a real complaint. Showing the
  * model's reasoning lets an officer catch that in seconds instead of never.
+ *
+ * `evidencePhotos` holds one entry per report that arrived with a photo
+ * (services/pipeline.js), so a mismatched photo on report #3 stays visible
+ * instead of being averaged into the issue-level `evidenceConfidence` below.
  */
 import { assetUrl } from '../lib/api.js';
 
 export default function IssueDrawer({ issue, onClose }) {
   const b = issue.dispatchBrief;
-  const sla = issue.slaDueAt ? new Date(issue.slaDueAt) : null;
-  const overdue = sla && sla < new Date();
 
   return (
     <div className="drawer">
@@ -45,14 +49,6 @@ export default function IssueDrawer({ issue, onClose }) {
           <div className="kv">
             <span>Photo evidence</span>
             <span>{Math.round(issue.evidenceConfidence * 100)}% supports claim</span>
-          </div>
-        )}
-        {sla && (
-          <div className="kv">
-            <span>SLA due</span>
-            <span style={overdue ? { color: 'var(--sev-5)' } : undefined}>
-              {sla.toLocaleString()} {overdue ? '· OVERDUE' : ''}
-            </span>
           </div>
         )}
       </section>
@@ -101,10 +97,22 @@ export default function IssueDrawer({ issue, onClose }) {
 
       {issue.evidencePhotos?.length > 0 && (
         <section>
-          <h4>Evidence</h4>
+          <h4>Photo evidence · Gemma's read</h4>
           <div className="evidence-photos">
-            {issue.evidencePhotos.map((p) => (
-              <img key={p} src={assetUrl(p)} alt="" loading="lazy" />
+            {issue.evidencePhotos.map((p, i) => (
+              <div className="evidence-photo" key={p.reportId ?? i}>
+                <img src={assetUrl(p.photoPath)} alt="" loading="lazy" />
+                <div className="evidence-caption">
+                  <span className={`evidence-badge ${p.supportsClaim === false ? 'mismatch' : 'ok'}`}>
+                    {p.supportsClaim === false ? '⚠ possible mismatch' : '✓ supports claim'}
+                    {p.evidenceConfidence != null && ` · ${Math.round(p.evidenceConfidence * 100)}%`}
+                  </span>
+                  {p.visibleElements?.length > 0 && (
+                    <p className="evidence-elements">Visible: {p.visibleElements.join(', ')}</p>
+                  )}
+                  {p.mismatchReason && <p className="evidence-mismatch">{p.mismatchReason}</p>}
+                </div>
+              </div>
             ))}
           </div>
         </section>

@@ -110,6 +110,7 @@ export function reportsRouter({ processReport, uploadsDir }) {
           _id: doc._id,
           rawText: doc.rawText,
           photo, // transient — never persisted
+          photoPath: doc.photoPath, // persisted — lets the pipeline attach it to the issue
           location: doc.location,
           areaHint: doc.areaHint,
         }).catch((err) => console.error(`[reports] pipeline crashed on ${doc._id}:`, err));

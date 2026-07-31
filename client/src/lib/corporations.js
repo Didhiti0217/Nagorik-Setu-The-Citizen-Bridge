@@ -89,20 +89,41 @@ export function containsPoint(corp, coordinates) {
 }
 
 /**
- * Keep only the issues inside this corporation.
+ * Which corporation a coordinate belongs to. Never returns null for a valid
+ * point, which is the whole point of this function.
  *
- * An issue whose centroid falls outside every corporation we know about is not
- * silently dropped — `unassigned` collects it so the console can say so out loud
- * instead of quietly under-reporting the city's workload.
+ * The five bboxes are hand-drawn and approximate (see file header), and
+ * Bangladesh has more city corporations than the five this build models — so a
+ * real citizen, reporting from a real location, will sometimes land outside
+ * every box. Falling back to "unassigned" there would make their complaint
+ * vanish from every admin's dashboard, which defeats the entire feature: a
+ * report that cannot be seen by any corporation is worse than one assigned to
+ * a nearby one. So containment decides first, and the nearest corporation by
+ * straight-line distance to its centre is the guaranteed fallback — every
+ * coordinate resolves to exactly one corporation, always.
  */
-export function filterIssues(issues, corp) {
-  if (!corp) return { inside: issues, unassigned: [] };
-  const inside = [];
-  const unassigned = [];
-  for (const issue of issues) {
-    const coords = issue?.centroid?.coordinates;
-    if (containsPoint(corp, coords)) inside.push(issue);
-    else if (!CORPORATIONS.some((c) => containsPoint(c, coords))) unassigned.push(issue);
+export function assignCorporation(coordinates) {
+  if (!Array.isArray(coordinates) || coordinates.length < 2) return null;
+  const contained = CORPORATIONS.find((c) => containsPoint(c, coordinates));
+  if (contained) return contained;
+
+  const [lng, lat] = coordinates;
+  let nearest = null;
+  let nearestDistSq = Infinity;
+  for (const c of CORPORATIONS) {
+    const dLng = c.center[0] - lng;
+    const dLat = c.center[1] - lat;
+    const distSq = dLng * dLng + dLat * dLat;
+    if (distSq < nearestDistSq) {
+      nearestDistSq = distSq;
+      nearest = c;
+    }
   }
-  return { inside, unassigned };
+  return nearest;
+}
+
+/** Keep only the issues that belong to this corporation (see assignCorporation). */
+export function filterIssues(issues, corp) {
+  if (!corp) return { inside: issues };
+  return { inside: issues.filter((i) => assignCorporation(i?.centroid?.coordinates)?.id === corp.id) };
 }

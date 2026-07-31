@@ -19,6 +19,24 @@ const MergeReasonSchema = new Schema(
   { _id: false },
 );
 
+// One entry per report that arrived with a photo — an issue can carry several
+// once duplicates merge in, and each keeps its own Stage 3 read rather than
+// collapsing to one number, because a mismatched photo on report #3 is exactly
+// the thing an officer needs to see, not average away.
+const EvidencePhotoSchema = new Schema(
+  {
+    reportId: Schema.Types.Mixed,
+    photoPath: String,
+    supportsClaim: { type: Boolean, default: null },
+    evidenceConfidence: { type: Number, default: null },
+    visibleElements: { type: [String], default: [] },
+    mismatchReason: { type: String, default: null },
+    imageQuality: { type: String, default: null },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 const IssueSchema = new Schema({
   // GeoJSON Point — [lng, lat]. 2dsphere index below powers $geoNear dedupe.
   centroid: {
@@ -42,6 +60,7 @@ const IssueSchema = new Schema({
   dispatchBrief: { type: Schema.Types.Mixed, default: null },
   slaDueAt: { type: Date, default: null },
   mergeReasons: { type: [MergeReasonSchema], default: [] },
+  evidencePhotos: { type: [EvidencePhotoSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

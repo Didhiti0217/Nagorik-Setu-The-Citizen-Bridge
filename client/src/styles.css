@@ -648,8 +648,36 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   font-size: 12.5px; color: var(--text-dim); padding: 8px 0; line-height: 1.5;
   border-bottom: 1px solid var(--border);
 }
-.evidence-photos { display: flex; gap: 8px; flex-wrap: wrap; }
-.evidence-photos img { width: 108px; height: 82px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+.evidence-photos { display: flex; flex-direction: column; gap: 10px; }
+.evidence-photo {
+  display: flex;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+.evidence-photo img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex: none;
+}
+.evidence-caption { min-width: 0; font-size: 12px; line-height: 1.5; }
+.evidence-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(46, 167, 126, 0.15);
+  color: var(--brand-bright);
+}
+.evidence-badge.mismatch { background: rgba(229, 72, 77, 0.15); color: var(--sev-5); }
+.evidence-elements { margin: 6px 0 0; color: var(--text-dim); }
+.evidence-mismatch { margin: 4px 0 0; color: var(--sev-5); }
 
 /* ------------------------------------------------------- transparency */
 .transparency { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; }
@@ -1183,22 +1211,8 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 
 .d2-chip { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #fff; border: 1px solid var(--line); color: var(--ink-dim); white-space: nowrap; }
 .d2-chip.count { background: rgba(232, 26, 77, 0.10); border-color: rgba(232, 26, 77, 0.35); color: var(--crimson-dark); font-weight: 600; }
-.d2-sla { font-size: 10.5px; color: var(--ink-dim); }
-.d2-sla.overdue { color: var(--sev-5); font-weight: 600; }
 
 .d2-empty { padding: 40px 20px; text-align: center; color: var(--ink-dim); font-size: 14px; }
-
-/* Reports whose coordinates fall outside every corporation boundary. Stated
-   plainly so the console never quietly under-reports the city's workload. */
-.d2-unassigned {
-  margin: 10px 0 0;
-  padding: 9px 13px;
-  border-radius: 9px;
-  background: #fdf3e5;
-  border: 1px solid #e9d2ae;
-  color: #7a5418;
-  font-size: 12.5px;
-}
 
 /* ---- right column (map + drawer share it) ---- */
 .dash2-aside { position: relative; min-width: 0; }
@@ -1326,7 +1340,9 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .dash2 .drawer .brief .bn { border-top-color: var(--line); }
 .dash2 .drawer .merge-item { color: var(--ink-dim); border-bottom-color: var(--line); }
 .dash2 .drawer .chip { background: #fff; border-color: var(--line); color: var(--ink-dim); }
-.dash2 .drawer .evidence-photos img { border-color: var(--line); }
+.dash2 .drawer .evidence-photo { background: var(--box); border-color: var(--line); }
+.dash2 .drawer .evidence-photo img { border-color: var(--line); }
+.dash2 .drawer .evidence-elements { color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost:hover { background: var(--box); color: var(--ink); }
 
