@@ -24,21 +24,22 @@ const ZOOM = Number(import.meta.env.VITE_MAP_ZOOM) || 11;
 
 /* A raster-only style: no token, no styling service.
  *
- * CARTO's dark basemap, NOT raw OpenStreetMap tiles. tile.openstreetmap.org
- * blocks many hosted origins (the map rendered black on Vercel), whereas the
- * CARTO CDN serves reliably. It is also already dark, so it matches the UI and
- * keeps the severity colours the brightest thing on screen — no dim overlay
- * needed. Multiple subdomains let the browser parallelise tile loads. */
+ * CARTO's light (Positron) basemap, NOT raw OpenStreetMap tiles.
+ * tile.openstreetmap.org blocks many hosted origins (the map rendered black on
+ * Vercel), whereas the CARTO CDN serves reliably. The light basemap keeps the
+ * map from reading as a dark box in an otherwise white console; the severity
+ * colours still stand out clearly on it. Multiple subdomains let the browser
+ * parallelise tile loads. */
 const STYLE = {
   version: 8,
   sources: {
     carto: {
       type: 'raster',
       tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
       ],
       tileSize: 256,
       attribution: '© OpenStreetMap contributors © CARTO',
