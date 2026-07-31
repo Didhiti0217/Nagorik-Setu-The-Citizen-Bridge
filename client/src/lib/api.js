@@ -141,12 +141,25 @@ export function getIssues(q = {}) {
 
 export const getIssue = (id) => request(`/api/issues/${id}`);
 
+/**
+ * Post a free-text status update. Gemma suggests a next status; the backend
+ * decides whether to apply it. Returns { issue, suggestion, applied, rejectReason }.
+ */
+export const postIssueUpdate = (id, text) =>
+  request(`/api/issues/${id}/updates`, { method: 'POST', body: { text } });
+
 /* ----------------------------------------------------------------- reports -- */
 
 export const getReport = (id) => request(`/api/reports/${id}`);
 
 /** The signed-in resident's own reports, newest first. Returns { reports }. */
 export const getMyReports = () => request('/api/reports/mine');
+
+/** Withdraw your own complaint. Returns { id, status: 'revoked' }. */
+export const revokeReport = (id) => request(`/api/reports/${id}/revoke`, { method: 'POST' });
+
+/** Accepted-only status transitions for one of your own reports. Returns { history }. */
+export const getReportStatusHistory = (id) => request(`/api/reports/${id}/status-history`);
 
 /**
  * Submit a citizen report.

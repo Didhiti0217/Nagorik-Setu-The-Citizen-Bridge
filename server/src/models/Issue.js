@@ -55,7 +55,14 @@ const IssueSchema = new Schema({
   evidenceConfidence: { type: Number, default: null },
   reportCount: { type: Number, default: 1 },
   priorityWeight: { type: Number, default: 0 },
-  status: { type: String, enum: ['open', 'dispatched', 'resolved'], default: 'open' },
+  // The lifecycle a real municipal complaint follows, not just "open vs closed".
+  // Gemma SUGGESTS a next step (services/statusEngine.js); this field only ever
+  // moves when the backend accepts that suggestion — see STATUS_ORDER.
+  status: {
+    type: String,
+    enum: ['reported', 'under_review', 'verified', 'assigned', 'in_progress', 'resolved', 'closed'],
+    default: 'reported',
+  },
   needsReview: { type: Boolean, default: false },
   dispatchBrief: { type: Schema.Types.Mixed, default: null },
   slaDueAt: { type: Date, default: null },

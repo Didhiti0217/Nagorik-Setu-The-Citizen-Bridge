@@ -10,12 +10,14 @@
  *   createIssue(issue)      -> created Issue (plain object, with _id)
  *   updateIssue(id, patch)  -> updated Issue   (patch may mix $inc/$push with plain fields)
  *   updateReport(id, patch) -> void            (plain field patch)
+ *   logStatusHistory(entry) -> void            (append-only; never updated or deleted)
  *
  * Do not change these signatures without Dev A — they are the frozen H+2
  * contract (pipeline.js param docs).
  */
 import { Issue } from '../models/Issue.js';
 import { Report } from '../models/Report.js';
+import { StatusHistory } from '../models/StatusHistory.js';
 
 export function createStore() {
   return {
@@ -33,7 +35,9 @@ export function createStore() {
             distanceField: 'distanceM',
             maxDistance: radiusM,
             spherical: true,
-            query: { status: { $ne: 'resolved' }, createdAt: { $gte: cutoff } },
+            // 'resolved'/'closed' are terminal — a new report near one of those
+            // is a fresh problem, not a duplicate of something already done.
+            query: { status: { $nin: ['resolved', 'closed'] }, createdAt: { $gte: cutoff } },
           },
         },
         { $sort: { distanceM: 1 } },
@@ -69,6 +73,10 @@ export function createStore() {
 
     async updateReport(id, patch) {
       await Report.findByIdAndUpdate(id, { $set: patch });
+    },
+
+    async logStatusHistory(entry) {
+      await StatusHistory.create(entry);
     },
   };
 }

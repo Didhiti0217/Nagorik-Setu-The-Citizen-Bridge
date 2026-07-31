@@ -18,26 +18,85 @@ import Sidebar from '../components/Sidebar.jsx';
 import Topbar from '../components/Topbar.jsx';
 import MobileTopbar from '../components/MobileTopbar.jsx';
 import MobileNav from '../components/MobileNav.jsx';
-import { assetUrl, getMyReports } from '../lib/api.js';
+import { assetUrl, getMyReports, getReportStatusHistory, revokeReport } from '../lib/api.js';
 import { useLang } from '../i18n/index.jsx';
 
 const ISSUE_STATUS_KEY = {
+  // Pre-lifecycle values, kept for issues seeded before this existed.
   open: 'statusOpen',
   dispatched: 'statusDispatched',
+  // The status lifecycle (services/statusEngine.js).
+  reported: 'statusReported',
+  under_review: 'statusUnderReview',
+  verified: 'statusVerified',
+  assigned: 'statusAssigned',
+  in_progress: 'statusInProgress',
   resolved: 'statusResolved',
+  closed: 'statusClosed',
 };
 
 /** Still waiting on the pipeline? Then there is no status to report yet. */
-const isPending = (r) => !r.issueId && r.status !== 'manual_review' && r.status !== 'failed';
+const isPending = (r) => !r.issueId && r.status !== 'manual_review' && r.status !== 'failed' && r.status !== 'revoked';
 
+/** Own status wins over the issue's — this citizen withdrew THEIR report, full stop. */
 function statusKey(report) {
+  if (report.status === 'revoked') return 'statusRevoked';
   if (report.issueId?.status) return ISSUE_STATUS_KEY[report.issueId.status] ?? 'statusOpen';
   if (report.status === 'manual_review') return 'statusManualReview';
   if (report.status === 'failed') return 'statusFailed';
   return null;
 }
 
-function ComplaintCard({ report, t, lang, category }) {
+/** A finished (or already-withdrawn) complaint has nothing left to revoke. */
+function canRevoke(report) {
+  if (report.status === 'revoked' || report.status === 'failed') return false;
+  const issueStatus = report.issueId?.status;
+  return issueStatus !== 'resolved' && issueStatus !== 'closed';
+}
+
+const STATUS_LABEL_TIMELINE = {
+  reported: 'statusReported',
+  under_review: 'statusUnderReview',
+  verified: 'statusVerified',
+  assigned: 'statusAssigned',
+  in_progress: 'statusInProgress',
+  resolved: 'statusResolved',
+  closed: 'statusClosed',
+};
+
+function StatusTimeline({ reportId, t, bn }) {
+  const [history, setHistory] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    getReportStatusHistory(reportId)
+      .then((res) => alive && setHistory(res.history ?? []))
+      .catch(() => alive && setHistory([]));
+    return () => {
+      alive = false;
+    };
+  }, [reportId]);
+
+  if (history === null) return <p className={`mc-timeline-loading ${bn ? 'bn' : ''}`}>{t('loading')}</p>;
+  if (history.length === 0) return <p className={`mc-timeline-empty ${bn ? 'bn' : ''}`}>{t('noTimelineYet')}</p>;
+
+  return (
+    <div className="mc-timeline">
+      {history.map((h, i) => (
+        <div className="mc-timeline-event" key={i}>
+          <span className="mc-timeline-label">
+            {t(STATUS_LABEL_TIMELINE[h.newStatus] ?? 'statusOpen')}
+          </span>
+          <span className="mc-timeline-time">
+            {h.createdAt ? new Date(h.createdAt).toLocaleString(bn ? 'bn-BD' : 'en-GB') : ''}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ComplaintCard({ report, t, lang, category, onRevoked }) {
   const bn = lang === 'bn';
   const issue = report.issueId || null;
   const severity = issue?.severity ?? report.gemmaOutput?.severity ?? null;
@@ -53,6 +112,24 @@ function ComplaintCard({ report, t, lang, category }) {
     minute: '2-digit',
   });
 
+  const [confirming, setConfirming] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [revokeError, setRevokeError] = useState(null);
+  const [timelineOpen, setTimelineOpen] = useState(false);
+
+  async function confirmRevoke() {
+    setRevoking(true);
+    setRevokeError(null);
+    try {
+      await revokeReport(report._id);
+      onRevoked();
+    } catch (err) {
+      setRevokeError(err.message);
+      setRevoking(false);
+      setConfirming(false);
+    }
+  }
+
   return (
     <article className="mc-card">
       {report.photoPath && (
@@ -64,7 +141,9 @@ function ComplaintCard({ report, t, lang, category }) {
           {severity && <span className={`sev sev-${severity}`}>S{severity}</span>}
           {cat && <span className="d2-chip">{category(cat)}</span>}
           {key ? (
-            <span className={`mc-status ${report.issueId?.status ?? report.status}`}>{t(key)}</span>
+            <span className={`mc-status ${report.status === 'revoked' ? 'revoked' : (report.issueId?.status ?? report.status)} ${bn ? 'bn' : ''}`}>
+              {t(key)}
+            </span>
           ) : (
             <span className={`mc-status pending ${bn ? 'bn' : ''}`}>{t('awaitingTriage')}</span>
           )}
@@ -86,6 +165,43 @@ function ComplaintCard({ report, t, lang, category }) {
             <span className="d2-chip">{issue.dispatchBrief.priority}</span>
           )}
         </div>
+
+        <div className="mc-actions">
+          {report.issueId && (
+            <button
+              type="button"
+              className={`mc-link-btn ${bn ? 'bn' : ''}`}
+              onClick={() => setTimelineOpen((o) => !o)}
+            >
+              {t(timelineOpen ? 'hideTimeline' : 'viewTimeline')}
+            </button>
+          )}
+
+          {canRevoke(report) && !confirming && (
+            <button type="button" className={`mc-link-btn danger ${bn ? 'bn' : ''}`} onClick={() => setConfirming(true)}>
+              {t('revoke')}
+            </button>
+          )}
+        </div>
+
+        {timelineOpen && report.issueId && (
+          <StatusTimeline reportId={report._id} t={t} bn={bn} />
+        )}
+
+        {confirming && (
+          <div className="mc-revoke-confirm">
+            <p className={bn ? 'bn' : ''}>{t('revokeConfirm')}</p>
+            {revokeError && <p className="mc-revoke-error">{revokeError}</p>}
+            <div className="mc-revoke-actions">
+              <button type="button" className="mc-revoke-yes" disabled={revoking} onClick={confirmRevoke}>
+                {revoking ? t('revoking') : t('revokeYes')}
+              </button>
+              <button type="button" className="mc-revoke-no" disabled={revoking} onClick={() => setConfirming(false)}>
+                {t('revokeNo')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </article>
   );
@@ -153,7 +269,7 @@ export default function MyComplaintsPage() {
           {reports?.length > 0 && (
             <div className="mc-list">
               {reports.map((r) => (
-                <ComplaintCard key={r._id} report={r} t={t} lang={lang} category={category} />
+                <ComplaintCard key={r._id} report={r} t={t} lang={lang} category={category} onRevoked={load} />
               ))}
             </div>
           )}

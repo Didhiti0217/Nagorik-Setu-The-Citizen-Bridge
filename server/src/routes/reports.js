@@ -1,7 +1,9 @@
 /**
- * POST /api/reports      — the citizen intake endpoint (signed-in residents)
- * GET  /api/reports/mine — the caller's own reports, for My Complaints
- * GET  /api/reports/:id  — one report, if it is yours (or you are an admin)
+ * POST /api/reports               — the citizen intake endpoint (signed-in residents)
+ * GET  /api/reports/mine          — the caller's own reports, for My Complaints
+ * GET  /api/reports/:id           — one report, if it is yours (or you are an admin)
+ * POST /api/reports/:id/revoke    — withdraw your own complaint
+ * GET  /api/reports/:id/status-history — a citizen-safe progress timeline
  *
  * WHY 202, NOT 200: Gemma triage takes 15-25s and that latency is irreducible
  * (thinking is 75-80% of tokens and cannot be disabled — pipeline.js header).
@@ -23,6 +25,10 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { Citizen } from '../models/Citizen.js';
 import { Report } from '../models/Report.js';
+import { Issue } from '../models/Issue.js';
+import { StatusHistory } from '../models/StatusHistory.js';
+import { publish } from '../lib/events.js';
+import { computePriorityWeight } from '../services/pipeline.js';
 
 const MIME_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
@@ -163,6 +169,101 @@ export function reportsRouter({ processReport, uploadsDir }) {
       // An unparseable ObjectId is a bad request, not a server error.
       if (err?.name === 'CastError') return res.status(400).json({ error: 'invalid id' });
       return next(err);
+    }
+  });
+
+  /**
+   * A citizen withdraws their own complaint. Never a hard delete — the report
+   * stays, flagged 'revoked', for the same reason a report is never dropped on
+   * pipeline failure: a citizen's history of what they filed should not vanish.
+   *
+   * If this report had merged into an issue, its contribution is unwound: the
+   * issue's reportCount drops, its own merge-reason and evidence-photo entries
+   * (if any) are pulled, and — only if that was the LAST active report behind
+   * the issue — the issue itself closes. This is a deterministic business rule,
+   * not a Gemma suggestion, so it bypasses services/statusEngine.js entirely;
+   * that gate exists for AI suggestions, not for "the complainant withdrew".
+   */
+  router.post('/:id/revoke', requireAuth, requireRole('citizen'), async (req, res, next) => {
+    try {
+      const report = await Report.findById(req.params.id);
+      if (!report || String(report.submittedBy) !== req.auth.id) {
+        return res.status(404).json({ error: 'not found' });
+      }
+      if (report.status === 'revoked') {
+        return res.status(409).json({ error: 'already revoked' });
+      }
+
+      report.status = 'revoked';
+      report.revokedAt = new Date();
+      await report.save();
+
+      if (report.issueId) {
+        const issue = await Issue.findById(report.issueId);
+        if (issue) {
+          const nextCount = Math.max(0, issue.reportCount - 1);
+          issue.reportCount = nextCount;
+          issue.priorityWeight = computePriorityWeight({
+            severity: issue.severity,
+            reportCount: Math.max(1, nextCount),
+            isLifeThreatening: issue.isLifeThreatening,
+          });
+          // Retract exactly this report's own contribution, not anyone else's.
+          issue.mergeReasons = issue.mergeReasons.filter((m) => String(m.reportId) !== String(report._id));
+          issue.evidencePhotos = issue.evidencePhotos.filter((p) => String(p.reportId) !== String(report._id));
+
+          if (nextCount === 0 && issue.status !== 'closed') {
+            const oldStatus = issue.status;
+            issue.status = 'closed';
+            await StatusHistory.create({
+              issueId: issue._id,
+              oldStatus,
+              newStatus: 'closed',
+              source: 'system',
+              suggestedStatus: null,
+              confidence: null,
+              reason: 'All citizen reports behind this issue were withdrawn.',
+              applied: true,
+            });
+          }
+
+          issue.updatedAt = new Date();
+          await issue.save();
+          publish('issue:updated', { issue: issue.toObject(), merged: false });
+        }
+      }
+
+      res.json({ id: report._id, status: 'revoked' });
+    } catch (err) {
+      if (err?.name === 'CastError') return res.status(400).json({ error: 'invalid id' });
+      next(err);
+    }
+  });
+
+  /**
+   * A citizen-safe read of their complaint's progress. Deliberately thinner than
+   * the admin timeline (routes/issues.js): only ACCEPTED transitions, and none
+   * of the AI-mechanics fields (confidence, what was suggested but rejected) —
+   * a resident wants to know what happened to their complaint, not watch the
+   * backend gate work.
+   */
+  router.get('/:id/status-history', requireAuth, async (req, res, next) => {
+    try {
+      const report = await Report.findById(req.params.id).lean();
+      const mine = report && String(report.submittedBy) === req.auth.id;
+      if (!report || (req.auth.role !== 'admin' && !mine)) {
+        return res.status(404).json({ error: 'not found' });
+      }
+      if (!report.issueId) return res.json({ history: [] });
+
+      const events = await StatusHistory.find({ issueId: report.issueId, applied: true })
+        .sort({ createdAt: 1 })
+        .select('oldStatus newStatus reason createdAt')
+        .lean();
+      res.json({ history: events });
+    } catch (err) {
+      if (err?.name === 'CastError') return res.status(400).json({ error: 'invalid id' });
+      next(err);
     }
   });
 

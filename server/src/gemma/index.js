@@ -1,8 +1,10 @@
 /**
  * The Gemma 4 engine — public surface.
  *
- * Five cognitive stages, one model. Routes and services import ONLY from
+ * Several cognitive stages, one model. Routes and services import ONLY from
  * here; nothing outside server/src/gemma/ should touch client.js directly.
+ * (The README's "five distinct cognitive roles" figure predates Stage 7 below
+ * — update it there if that count is meant to stay in sync.)
  *
  * Every stage returns { data, meta } where meta carries latency, provider,
  * model and whether a repair pass was needed — that is what `npm run eval`
@@ -20,6 +22,7 @@ import {
   DispatchSchema,
   CopilotCallSchema,
   CopilotAnswerSchema,
+  StatusSuggestionSchema,
   manualReviewFallback,
 } from './schemas.js';
 
@@ -32,6 +35,7 @@ import {
   buildAnswerPrompt,
   version as copilotVersion,
 } from './prompts/copilot.js';
+import { buildStatusPrompt, version as statusVersion } from './prompts/status.js';
 
 export { setCallLogger, setMockFixture, activeConfig, GemmaError, GemmaParseError } from './client.js';
 export * from './schemas.js';
@@ -201,10 +205,45 @@ export async function narrateCopilotAnswer({ question, tool, results }) {
   return { data, meta };
 }
 
+/* ---------------------------------------------------------------- *
+ * Stage 7 — Status-transition suggestion
+ *
+ * Fails toward "no transition" — a Gemma error here must never move an
+ * issue's status, so the caller sees confidence 0 and treats it exactly like
+ * any other suggestion the backend gate rejects (services/statusEngine.js).
+ * ---------------------------------------------------------------- */
+export async function suggestStatus({ currentStatus, updateText, evidence }) {
+  try {
+    const { data, meta } = await generateJson({
+      stage: 'status',
+      promptVersion: statusVersion,
+      parts: buildStatusPrompt({ currentStatus, updateText, evidence }),
+      schema: StatusSuggestionSchema,
+      temperature: 0,
+      maxTokens: 1024,
+    });
+    return { data, meta };
+  } catch (err) {
+    if (err instanceof GemmaError) {
+      return {
+        data: {
+          evidence_type: 'error',
+          next_status: currentStatus,
+          confidence: 0,
+          reason: 'Status suggestion failed; no transition applied.',
+        },
+        meta: { failed: true, reason: err.message },
+      };
+    }
+    throw err;
+  }
+}
+
 export const PROMPT_VERSIONS = {
   triage: triageVersion,
   evidence: evidenceVersion,
   dedupe: dedupeVersion,
   dispatch: dispatchVersion,
   copilot: copilotVersion,
+  status: statusVersion,
 };

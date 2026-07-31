@@ -28,7 +28,9 @@ import {
   verifyEvidence,
   findDuplicate,
   generateDispatchBrief,
+  suggestStatus,
 } from '../gemma/index.js';
+import { decideStatusTransition } from './statusEngine.js';
 
 /** Issues at or above this severity get an auto-generated dispatch brief. */
 const DISPATCH_SEVERITY_THRESHOLD = 4;
@@ -44,9 +46,36 @@ export const DEDUPE_WINDOW_HOURS = 72;
  * @param {(id:string, patch:object) => Promise<object>} deps.updateIssue
  * @param {(id:string, patch:object) => Promise<void>} deps.updateReport
  * @param {(event:string, payload:object) => void} [deps.publish]  SSE broadcast
+ * @param {(entry:object) => Promise<void>} [deps.logStatusHistory]  append-only status log
  */
 export function createPipeline(deps) {
-  const { findNearbyIssues, createIssue, updateIssue, updateReport, publish = () => {} } = deps;
+  const {
+    findNearbyIssues,
+    createIssue,
+    updateIssue,
+    updateReport,
+    publish = () => {},
+    logStatusHistory = async () => {},
+  } = deps;
+
+  /**
+   * Ask Gemma whether this merged report moves the issue's status, then run the
+   * suggestion through the backend gate (statusEngine.js). Never throws: a
+   * failure here must not sink an otherwise-good merge, so it degrades to "no
+   * transition" exactly like a rejected suggestion would.
+   */
+  async function evaluateStatusTransition({ currentStatus, updateText, evidence }) {
+    try {
+      const { data } = await suggestStatus({ currentStatus, updateText, evidence });
+      return { suggestion: data, decision: decideStatusTransition({ currentStatus, suggestion: data }) };
+    } catch (err) {
+      console.error('[pipeline] status suggestion failed:', err.message);
+      return {
+        suggestion: null,
+        decision: { accepted: false, nextStatus: null, rejectReason: err.message },
+      };
+    }
+  }
 
   /**
    * The admin-facing record of one photo: where it lives on disk, plus Gemma's
@@ -140,6 +169,18 @@ export function createPipeline(deps) {
         // --- merge into the existing physical problem ---------------------
         const target = nearby[dupe.data.candidate_index];
         merged = true;
+
+        // --- Stage 7: does this new report move the issue's status? -------
+        // A merged report is itself the "citizen update" the status-tracking
+        // design (docs/plan.md) describes — no separate comment feature needed.
+        const t5 = Date.now();
+        const { suggestion, decision } = await evaluateStatusTransition({
+          currentStatus: target.status,
+          updateText: report.rawText,
+          evidence: evidence.data,
+        });
+        timings.statusMs = Date.now() - t5;
+
         issue = await updateIssue(target._id, {
           $inc: { reportCount: 1 },
           // Severity of an issue is the worst any citizen has reported.
@@ -150,6 +191,7 @@ export function createPipeline(deps) {
             isLifeThreatening: target.isLifeThreatening || triage.data.is_life_threatening,
           }),
           updatedAt: new Date(),
+          ...(decision.accepted ? { status: decision.nextStatus } : {}),
           $push: {
             mergeReasons: {
               reportId: report._id,
@@ -160,6 +202,19 @@ export function createPipeline(deps) {
             // report a pothole photographs it from a clearer angle than the 1st.
             ...(photoEntry ? { evidencePhotos: photoEntry } : {}),
           },
+        });
+
+        // Logged whether or not the backend accepted it — an officer scrolling
+        // the timeline should see every suggestion Gemma made, not just the wins.
+        await logStatusHistory({
+          issueId: target._id,
+          oldStatus: target.status,
+          newStatus: decision.accepted ? decision.nextStatus : target.status,
+          source: 'merge',
+          suggestedStatus: suggestion?.next_status ?? null,
+          confidence: suggestion?.confidence ?? null,
+          reason: suggestion?.reason ?? decision.rejectReason,
+          applied: decision.accepted,
         });
       } else {
         // --- a genuinely new problem --------------------------------------
@@ -182,10 +237,21 @@ export function createPipeline(deps) {
             reportCount: 1,
             isLifeThreatening: triage.data.is_life_threatening,
           }),
-          status: 'open',
+          status: 'reported',
           needsReview: triage.manualReview,
           createdAt: new Date(),
           updatedAt: new Date(),
+        });
+
+        await logStatusHistory({
+          issueId: issue._id,
+          oldStatus: null,
+          newStatus: 'reported',
+          source: 'system',
+          suggestedStatus: null,
+          confidence: null,
+          reason: 'New issue created from a citizen report.',
+          applied: true,
         });
       }
 

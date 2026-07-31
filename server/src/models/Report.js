@@ -28,11 +28,13 @@ const ReportSchema = new Schema({
   // complaints" and remain readable only by the console. No backfill.
   submittedBy: { type: Schema.Types.ObjectId, ref: 'Citizen', default: null, index: true },
   // received -> processing -> triaged|manual_review -> linked | failed
+  // A citizen can also move ANY of those to 'revoked' themselves (routes/reports.js).
   status: { type: String, default: 'received' },
   gemmaOutput: { type: Schema.Types.Mixed, default: null },
   evidenceCheck: { type: Schema.Types.Mixed, default: null },
   issueId: { type: Schema.Types.ObjectId, ref: 'Issue', default: null },
   error: { type: String, default: null },
+  revokedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -13,9 +13,9 @@
  * Treat any change to this file as a security change.
  */
 import { textPart } from '../client.js';
-import { CATEGORIES } from '../schemas.js';
+import { CATEGORIES, STATUSES } from '../schemas.js';
 
-export const version = 'copilot@3';
+export const version = 'copilot@4';
 
 const TOOL_SPEC = `Available tools:
 
@@ -49,7 +49,7 @@ When a question mixes a domain with danger ("dangerous electrical faults"),
 danger wins: choose hazard, not the domain category.
   days          : integer 1-365 | null   (how far back to look)
   area          : string | null          (ward, road, market or area name)
-  status        : "open" | "dispatched" | "resolved" | null
+  status        : ${STATUSES.join(' | ')} | null
   limit         : integer 1-100 | null`;
 
 const SYSTEM = `You are the data copilot for a ward councilor at Gazipur City Corporation.

@@ -80,6 +80,12 @@ const FIXTURES = {
     answer_en: 'Hazard issues were reported most in the last seven days.',
     highlight_issue_ids: [],
   },
+  // Overwritten mid-test (setMockFixture) to exercise both an accepted and a
+  // rejected status suggestion against the real backend gate.
+  status: {
+    evidence_type: 'duplicate_confirmation', next_status: 'under_review', confidence: 0.95,
+    reason: 'A second citizen confirmed the same transformer.',
+  },
 };
 
 const TONGI = { lng: 90.4012, lat: 23.8918 };
@@ -245,6 +251,43 @@ try {
   check('priorityWeight computed', issue.priorityWeight > 0);
   check('merge reason recorded', issue.mergeReasons.length === 1);
 
+  /* ===== 4b. AI-assisted status tracking: Gemma suggests, backend decides == */
+  // The 2nd (merged) report is itself the "citizen update" the status-tracking
+  // design describes — the mock fixture above is a high-confidence, single-step
+  // suggestion (reported -> under_review), so the backend gate should accept it.
+  const detail1 = await (await api(`/api/issues/${issue._id}`, bearer(AT))).json();
+  check('a new issue starts life as "reported", not "open"', detail1.statusHistory[0].newStatus === 'reported');
+  check('a high-confidence single-step suggestion is applied on merge', detail1.status === 'under_review');
+  check('status history has one entry per transition attempt', detail1.statusHistory.length === 2);
+  check('the merge-triggered entry is logged as such', detail1.statusHistory[1].source === 'merge' && detail1.statusHistory[1].applied === true);
+
+  check('a citizen cannot post a status update', (await api(`/api/issues/${issue._id}/updates`, asJson(CT, { text: 'test' }))).status === 403);
+
+  // Skip-ahead, even at high confidence, must be REJECTED — this is the one
+  // property the whole design exists to guarantee (docs/plan.md: "the backend
+  // is always the final authority").
+  setMockFixture('status', {
+    evidence_type: 'premature_closure', next_status: 'resolved', confidence: 0.97,
+    reason: 'Citizen says it looks fixed.',
+  });
+  const skipAhead = await api(`/api/issues/${issue._id}/updates`, asJson(AT, { text: 'Looks fixed to me!' }));
+  const skipAheadBody = await skipAhead.json();
+  check('POST /api/issues/:id/updates returns 201', skipAhead.status === 201);
+  check('a skip-ahead suggestion is rejected regardless of confidence', skipAheadBody.applied === false);
+  check('the issue status is unchanged after a rejected suggestion', skipAheadBody.issue.status === 'under_review');
+
+  // A valid single-step suggestion from an officer's own note should apply.
+  setMockFixture('status', {
+    evidence_type: 'official_dispatch', next_status: 'verified', confidence: 0.93,
+    reason: 'Officer confirmed the transformer is sparking on site.',
+  });
+  const goodStep = await (await api(`/api/issues/${issue._id}/updates`, asJson(AT, { text: 'Confirmed on site, dispatching crew.' }))).json();
+  check('a valid single-step officer update is applied', goodStep.applied === true && goodStep.issue.status === 'verified');
+
+  const detail2 = await (await api(`/api/issues/${issue._id}`, bearer(AT))).json();
+  check('rejected AND accepted suggestions are both on the timeline', detail2.statusHistory.length === 4);
+  check('the rejected entry records what Gemma suggested anyway', detail2.statusHistory[2].suggestedStatus === 'resolved' && detail2.statusHistory[2].applied === false);
+
   const geo = await (await api('/api/issues?format=geojson', bearer(AT))).json();
   check('GeoJSON FeatureCollection returned', geo.type === 'FeatureCollection' && geo.features.length === 1);
   check('feature geometry is a Point', geo.features[0].geometry.type === 'Point');
@@ -332,6 +375,37 @@ try {
   check('an unparseable report id is a 400', (await api('/api/reports/not-an-objectid', bearer(CT))).status === 400);
   check('an unknown route is a 404 with a JSON body',
     (await api('/api/nope')).status === 404 && (await (await api('/api/nope')).json()).error === 'not found');
+
+  /* ===== 11. a citizen can withdraw their own complaint =================== */
+  // Far from Tongi, on purpose — a solo issue with exactly one report, so
+  // revoking it is the case that should close the issue (reportCount -> 0).
+  const SYLHET = { lng: 91.8697, lat: 24.8949 };
+  const r3 = await api('/api/reports', asJson(CT, { rawText: 'pothole outside Sylhet railway station', ...SYLHET }));
+  const r3body = await r3.json();
+  const r3Linked = await waitFor(async () => (await (await api(`/api/reports/${r3body.id}`, bearer(CT))).json()).issueId);
+  check('a third report (different location) links to its own new issue', r3Linked);
+  const r3detail = await (await api(`/api/reports/${r3body.id}`, bearer(CT))).json();
+  const soloIssueId = r3detail.issueId._id ?? r3detail.issueId;
+
+  const thirdOtp = await (await api('/api/auth/otp/request', asJson(null, { phone: '01922222222' }))).json();
+  const thirdVerify = await api('/api/auth/otp/verify', asJson(null, { phone: '01922222222', code: thirdOtp.demoCode }));
+  const NOT_OWNER_TOKEN = (await thirdVerify.json()).token;
+
+  check('a citizen cannot revoke someone else\'s report', (await api(`/api/reports/${r3body.id}/revoke`, asJson(NOT_OWNER_TOKEN, {}))).status === 404);
+  check('an admin cannot use the citizen-only revoke route', (await api(`/api/reports/${r3body.id}/revoke`, asJson(AT, {}))).status === 403);
+
+  const revokeRes = await api(`/api/reports/${r3body.id}/revoke`, asJson(CT, {}));
+  const revokeBody = await revokeRes.json();
+  check('a citizen can revoke their own report', revokeRes.status === 200 && revokeBody.status === 'revoked');
+  check('revoking twice is a 409', (await api(`/api/reports/${r3body.id}/revoke`, asJson(CT, {}))).status === 409);
+
+  const soloIssueAfter = await (await api(`/api/issues/${soloIssueId}`, bearer(AT))).json();
+  check('the solo issue closed once its only report was withdrawn', soloIssueAfter.status === 'closed' && soloIssueAfter.reportCount === 0);
+
+  const revokedHistory = await (await api(`/api/reports/${r3body.id}/status-history`, bearer(CT))).json();
+  check('the citizen-safe timeline shows the auto-close, not AI internals',
+    revokedHistory.history.some((h) => h.newStatus === 'closed') && !JSON.stringify(revokedHistory).includes('confidence'));
+  check('a stranger cannot read this report\'s timeline', (await api(`/api/reports/${r3body.id}/status-history`, bearer(NOT_OWNER_TOKEN))).status === 404);
 
   console.log(`\n${'='.repeat(60)}`);
   if (failures.length === 0) {

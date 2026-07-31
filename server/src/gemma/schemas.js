@@ -32,6 +32,20 @@ export const DEPARTMENTS = [
 
 export const ACTIONS = ['immediate_dispatch', 'scheduled_maintenance', 'monitor'];
 
+// The municipal-complaint lifecycle (docs/plan.md's status-tracking design).
+// Order matters — services/statusEngine.js only accepts a transition to the
+// SINGLE next entry in this list; skipping straight from "reported" to
+// "resolved" is rejected no matter how confident Gemma is.
+export const STATUSES = [
+  'reported',
+  'under_review',
+  'verified',
+  'assigned',
+  'in_progress',
+  'resolved',
+  'closed',
+];
+
 /* --------------------------------------------------------------- *
  * Stage 2 — Triage & structuring
  * --------------------------------------------------------------- */
@@ -110,11 +124,26 @@ export const CopilotCallSchema = z.object({
       min_severity: z.coerce.number().int().min(1).max(5).nullable().catch(null),
       days: z.coerce.number().int().min(1).max(365).nullable().catch(null),
       area: z.string().max(120).nullable().catch(null),
-      status: z.enum(['open', 'dispatched', 'resolved']).nullable().catch(null),
+      status: z.enum(STATUSES).nullable().catch(null),
       limit: z.coerce.number().int().min(1).max(100).nullable().catch(null),
     })
     .catch({}),
   intent_bn: z.string().max(300).catch(''),
+});
+
+/* --------------------------------------------------------------- *
+ * Stage 7 — Status-transition suggestion
+ *
+ * Gemma reads a new update against an issue's CURRENT status and suggests
+ * where it goes next. It never writes the database — services/statusEngine.js
+ * is the only thing that decides whether a suggestion is actually applied
+ * (docs/plan.md's AI-assisted status tracking design).
+ * --------------------------------------------------------------- */
+export const StatusSuggestionSchema = z.object({
+  evidence_type: z.string().max(60).catch('unspecified'),
+  next_status: z.enum(STATUSES),
+  confidence: z.coerce.number().min(0).max(1),
+  reason: z.string().min(1).max(300),
 });
 
 /** Second copilot turn: narrate the query results back in Bangla. */

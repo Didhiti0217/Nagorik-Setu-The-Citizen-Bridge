@@ -635,6 +635,47 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .evidence-elements { margin: 6px 0 0; color: var(--text-dim); }
 .evidence-mismatch { margin: 4px 0 0; color: var(--sev-5); }
 
+/* the status lifecycle: a chip on the header row, the "post an update" form,
+   and the append-only timeline (see IssueDrawer.jsx / statusEngine.js) */
+.status-chip { background: var(--surface-2); border-color: var(--border); color: var(--text-dim); }
+.status-chip.status-resolved,
+.status-chip.status-closed { background: rgba(46, 167, 126, 0.16); border-color: var(--brand); color: #8de3c2; }
+.status-chip.status-in_progress { background: rgba(216, 162, 44, 0.16); border-color: var(--sev-3); color: var(--sev-3); }
+
+.status-update-form { display: flex; flex-direction: column; gap: 8px; }
+.status-update-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  resize: vertical;
+}
+.status-update-form textarea:focus { outline: none; border-color: var(--brand-bright); }
+.status-update-form .btn { align-self: flex-start; padding: 8px 16px; font-size: 13px; }
+.status-update-error { margin: 0; font-size: 12.5px; color: var(--sev-5); }
+.status-update-result { margin: 0; font-size: 12.5px; }
+.status-update-result.applied { color: var(--brand-bright); }
+.status-update-result.rejected { color: var(--text-dim); }
+
+.status-timeline { display: flex; flex-direction: column; gap: 10px; }
+.status-event {
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 6px 6px 0;
+  font-size: 12.5px;
+}
+.status-event.rejected { border-left-color: var(--border); opacity: 0.75; }
+.status-event-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.status-event-label { font-weight: 600; }
+.status-event-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+.status-event-note { margin-top: 3px; color: var(--text-dim); font-style: italic; }
+.status-event-reason { margin-top: 3px; color: var(--text-dim); }
+
 .live-badge {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 11px; color: var(--text-dim);
@@ -903,10 +944,67 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   color: var(--ink-dim);
   white-space: nowrap;
 }
-.mc-status.open { border-color: rgba(232, 26, 77, 0.35); color: var(--crimson); }
-.mc-status.dispatched { border-color: rgba(216, 162, 44, 0.5); color: #8a6410; }
-.mc-status.resolved { border-color: rgba(31, 122, 92, 0.45); color: var(--brand); }
-.mc-status.pending { border-style: dashed; }
+.mc-status.open,
+.mc-status.reported,
+.mc-status.under_review,
+.mc-status.manual_review { border-color: rgba(232, 26, 77, 0.35); color: var(--crimson); }
+.mc-status.dispatched,
+.mc-status.verified,
+.mc-status.assigned,
+.mc-status.in_progress { border-color: rgba(216, 162, 44, 0.5); color: #8a6410; }
+.mc-status.resolved,
+.mc-status.closed { border-color: rgba(31, 122, 92, 0.45); color: var(--brand); }
+.mc-status.pending,
+.mc-status.failed { border-style: dashed; }
+.mc-status.revoked { border-color: var(--line); color: var(--ink-dim); text-decoration: line-through; }
+
+.mc-actions { display: flex; gap: 14px; margin-top: 10px; }
+.mc-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-dim);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.mc-link-btn:hover { color: var(--ink); }
+.mc-link-btn.danger { color: var(--crimson); }
+.mc-link-btn.danger:hover { color: var(--crimson-dark); }
+
+.mc-timeline { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.mc-timeline-event { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+.mc-timeline-label { font-weight: 600; color: var(--ink); }
+.mc-timeline-time { color: var(--ink-dim); white-space: nowrap; }
+.mc-timeline-loading,
+.mc-timeline-empty { margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-dim); }
+
+.mc-revoke-confirm {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid rgba(232, 26, 77, 0.3);
+  border-radius: 10px;
+}
+.mc-revoke-confirm p { margin: 0 0 8px; font-size: 13px; color: var(--ink); }
+.mc-revoke-error { color: var(--crimson) !important; }
+.mc-revoke-actions { display: flex; gap: 8px; }
+.mc-revoke-yes,
+.mc-revoke-no {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mc-revoke-yes { background: var(--crimson); border: none; color: #fff; }
+.mc-revoke-yes:hover:not(:disabled) { background: var(--crimson-dark); }
+.mc-revoke-no { background: none; border: 1px solid var(--line); color: var(--ink-dim); }
+.mc-revoke-no:hover:not(:disabled) { background: var(--box); }
+.mc-revoke-yes:disabled, .mc-revoke-no:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 560px) {
   .mc-thumb { width: 64px; height: 64px; }
@@ -1302,6 +1400,14 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .dash2 .drawer .evidence-elements { color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost:hover { background: var(--box); color: var(--ink); }
+.dash2 .drawer .status-chip { background: #fff; border-color: var(--line); color: var(--ink-dim); }
+.dash2 .drawer .status-update-form textarea { background: #fff; border-color: var(--line); color: var(--ink); }
+.dash2 .drawer .status-update-result.rejected { color: var(--ink-dim); }
+.dash2 .drawer .status-event { background: var(--box); border-left-color: var(--crimson); }
+.dash2 .drawer .status-event.rejected { border-left-color: var(--line); }
+.dash2 .drawer .status-event-time,
+.dash2 .drawer .status-event-note,
+.dash2 .drawer .status-event-reason { color: var(--ink-dim); }
 
 /* ---- responsive ---- */
 @media (max-width: 1080px) {
