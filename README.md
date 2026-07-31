@@ -24,7 +24,6 @@ are published here, open right now:
 |---|---|
 | 🧍 **Resident** — [`/report`](https://nagorik-setu.vercel.app/report) | Enter **any** Bangladeshi-format mobile number (e.g. `01712345678`). The deployment runs in demo mode, so the 6-digit code appears **on screen** instead of being sent by SMS — no SIM required. The number is never dialled or texted. |
 | 🏛️ **Councilor console** — [`/admin`](https://nagorik-setu.vercel.app/admin) | `gcc@nagoriksetu.demo` · password `nagorik-demo-2026` — a deliberately published demo account. |
-| 🔍 **Transparency** — [`/transparency`](https://nagorik-setu.vercel.app/transparency) | Nothing at all. Left fully public on purpose, so every raw Gemma 4 call, its latency and its output can be inspected without signing in. |
 
 **Why a sign-in exists.** A resident must be able to follow *their own* complaint, and one
 citizen must not be able to read another's free text and precise location. The rule that
@@ -215,7 +214,7 @@ pin lands on the map on camera.
 |---|---|---|
 | **Resident** | Phone number + 6-digit OTP (demo mode shows the code on screen) | Submit reports; read **only their own** |
 | **Admin** | Email + password, issued by `seed:admins` or an invite link | Issues, copilot and stream **for their own corporation** |
-| **Anyone** | — | `/api/health`, `/api/transparency` |
+| **Anyone** | — | `/api/health` |
 
 Sessions are HS256 JWTs. The server **refuses to boot** if `JWT_SECRET` is missing or under
 32 characters, and refuses to boot if `AUTH_DEMO_MODE=true` is paired with a real OTP sender
@@ -324,7 +323,6 @@ five stages, printing per-stage latency. Needs a provider; needs no database.
 | Method | Route | Who |
 |---|---|---|
 | `GET` | `/api/health` | public |
-| `GET` | `/api/transparency` | public |
 | `POST` | `/api/auth/otp/request` · `/otp/verify` | public (resident sign-in) |
 | `POST` | `/api/auth/admin/login` | public (console sign-in) |
 | `GET` | `/api/auth/me` · `POST /api/auth/logout` | any signed-in user |
@@ -347,7 +345,6 @@ Feature-complete and deployed.
 - ✅ **REST API + SSE** — every route guarded, rate limited, error-handled
 - ✅ **Authentication** — resident OTP, admin credentials, invite/accept, stream tickets
 - ✅ **Resident PWA and councilor console** — Bangla-first, mobile responsive, five corporations
-- ✅ **Transparency page** — every raw Gemma call, public
 - ✅ **Evaluation** — three harnesses, published numbers, per-error analysis
 
 ---
@@ -365,7 +362,7 @@ server/
 │   ├── auth.js            ← the whole authorization surface
 │   ├── rateLimit.js       ├── errors.js        └── validate.js
 ├── src/models/            ← Issue · Report · Citizen · AdminUser · OtpChallenge · AdminInvite
-├── src/routes/            ← auth · reports · issues · stream · transparency · copilot
+├── src/routes/            ← auth · reports · issues · stream · copilot
 ├── src/services/
 │   ├── pipeline.js        ← intake → triage → evidence → dedupe → issue
 │   └── auth.js            ← OTP, sessions, invites
@@ -374,7 +371,7 @@ server/
 
 client/src/
 ├── pages/                 ← Landing · SignIn · Report · MyComplaints
-│                            AdminLogin · InviteAccept · Dashboard · Copilot · Transparency
+│                            AdminLogin · InviteAccept · Dashboard · Copilot
 ├── components/            ← Sidebar · MapView · IssueDrawer · CopilotChat · nav
 └── lib/                   ← api.js · session.js · corporations.js
 ```

@@ -5,8 +5,8 @@
  * here; nothing outside server/src/gemma/ should touch client.js directly.
  *
  * Every stage returns { data, meta } where meta carries latency, provider,
- * model and whether a repair pass was needed — that is what feeds the
- * Transparency page and the benchmark table in the writeup.
+ * model and whether a repair pass was needed — that is what `npm run eval`
+ * scores into the benchmark table in the README and the writeup.
  *
  * Token budgets are set per stage because Gemma 4 always reasons first and
  * those thought tokens are billed against the output budget. Measured triage

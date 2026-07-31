@@ -37,15 +37,17 @@ async function main() {
   // not been run against THIS database. Say it once, at boot, instead of letting a
   // login screen imply the password is wrong.
   //
-  // A warning and not a boot failure: the citizen app and the public transparency
-  // page work perfectly well with no admins, so this is a valid state — unlike a
-  // missing JWT_SECRET, which is why that one refuses to start.
+  // A warning and not a boot failure: the citizen app works perfectly well with
+  // no admins, so this is a valid state — unlike a missing JWT_SECRET, which is
+  // why that one refuses to start.
   if ((await AdminUser.countDocuments()) === 0) {
     console.warn('[auth] no console accounts exist in this database — run `npm run seed:admins`');
   }
 
-  // Persist every model call for the Transparency page. A logging failure must
-  // never break a pipeline run, so it is swallowed with a warning.
+  // Persist every model call to gemma_calls — this is what `npm run eval` scores
+  // to produce the measured results in the README (latency, parse success, etc).
+  // A logging failure must never break a pipeline run, so it is swallowed with a
+  // warning rather than thrown.
   setCallLogger(async (record) => {
     try {
       await GemmaCall.create(record);

@@ -172,8 +172,12 @@ Councilor types in Bangla: *"গত সাত দিনে টঙ্গীতে
 
 Indexes: `2dsphere` on `reports.location` and `issues.centroid`; `{category:1, createdAt:-1}` on issues.
 
-### Transparency page — cheap points, do not skip
-`/transparency` renders the last 100 `gemma_calls` with stage, modalities, latency, and **raw** model output. ~45 minutes of work. It answers the judge's unspoken question — *"is this real or faked for the demo?"* — and supplies real latency numbers for the writeup.
+### Transparency page — REMOVED, superseded by the eval harness
+The original plan was `/transparency`, an in-app page rendering the last 100 `gemma_calls`
+raw. It was later removed entirely (page, route, nav links). The same evidence-of-realness
+argument — *"is this real or faked for the demo?"* — is now made by §8's eval harness: three
+independently-run scoring passes against the same `gemma_calls` collection, published as a
+results table in the README rather than left for a judge to click through live.
 
 ---
 
@@ -286,7 +290,7 @@ Judges watch these back to back. The first 15 seconds decide the score.
 | 1:15–1:40 | **Dedupe reveal.** "Forty citizens reported this. One ticket." Show count + merged evidence photos. |
 | 1:40–2:05 | **The Copilot.** Ask in Bangla, watch the map rearrange. |
 | 2:05–2:25 | **Offline proof.** Wifi off on camera. Submit again. Still works. Zero cost per report. |
-| 2:25–2:45 | Transparency page + the benchmark table. "Nothing here is faked." |
+| 2:25–2:45 | The benchmark table from the README (no in-app Transparency page anymore). "Nothing here is faked." |
 | 2:45–3:00 | Impact line, repo + demo URLs on screen. |
 
 No slides. No talking-head intro. No logo animation. Product on screen from second one.

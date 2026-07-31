@@ -1,8 +1,8 @@
 /**
  * The left rail, in two variants.
  *
- * `citizen` (default) is the resident's app: report, my complaints, transparency.
- * `admin` is the corporation console: work queue, transparency, and the signed-in
+ * `citizen` (default) is the resident's app: report, my complaints.
+ * `admin` is the corporation console: work queue, copilot, and the signed-in
  * jurisdiction with a way out.
  *
  * The variants exist mainly to keep the console off the citizen rail. A resident
@@ -55,14 +55,6 @@ function ComplaintsIcon() {
     </svg>
   );
 }
-function TransparencyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...stroke}>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
 function CopilotIcon() {
   return (
     <svg viewBox="0 0 24 24" {...stroke}>
@@ -75,12 +67,10 @@ const NAV = {
   citizen: [
     { to: '/report', key: 'report', Icon: ReportIcon },
     { to: '/my-complaints', key: 'myComplaints', Icon: ComplaintsIcon },
-    { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
   ],
   admin: [
     { to: '/admin', key: 'dashboard', Icon: DashboardIcon },
     { to: '/copilot', key: 'copilot', Icon: CopilotIcon },
-    { to: '/transparency', key: 'transparency', Icon: TransparencyIcon },
   ],
 };
 

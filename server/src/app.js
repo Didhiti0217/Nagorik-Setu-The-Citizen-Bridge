@@ -22,7 +22,6 @@ import { authRouter } from './routes/auth.js';
 import { reportsRouter } from './routes/reports.js';
 import { issuesRouter } from './routes/issues.js';
 import { streamRouter } from './routes/stream.js';
-import { transparencyRouter } from './routes/transparency.js';
 import { copilotRouter } from './routes/copilot.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -73,7 +72,6 @@ export function createApp({ processReport }) {
   app.use('/api/reports', reportsRouter({ processReport, uploadsDir }));
   app.use('/api/issues', issuesRouter());
   app.use('/api/stream', streamRouter());
-  app.use('/api/transparency', transparencyRouter());
   app.use('/api/copilot', copilotRouter());
 
   app.use(notFound);

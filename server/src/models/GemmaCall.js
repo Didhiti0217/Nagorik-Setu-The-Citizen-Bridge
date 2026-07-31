@@ -2,9 +2,10 @@
  * GemmaCall — the audit log for every single model call.
  *
  * Written by the logger the server injects into gemma/client.js via
- * setCallLogger(). This is the data behind the in-app Transparency page and the
- * benchmark table in the writeup — our proof-of-realness for the Functionality
- * score (CLAUDE.md §2). The record shape mirrors exactly what client.js emits.
+ * setCallLogger(). `npm run eval` scores this collection into the measured
+ * results in the README and the writeup (latency, JSON parse success rate,
+ * etc.) — that is the project's proof-of-realness now, not a public page. The
+ * record shape mirrors exactly what client.js emits.
  */
 import mongoose from 'mongoose';
 
@@ -28,7 +29,7 @@ const GemmaCallSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Transparency page pulls the most recent calls.
+// eval/run.js pulls the most recent calls to score the live system.
 GemmaCallSchema.index({ createdAt: -1 });
 
 export const GemmaCall = mongoose.model('GemmaCall', GemmaCallSchema);

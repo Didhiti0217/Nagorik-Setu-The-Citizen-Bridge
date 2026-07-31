@@ -74,7 +74,7 @@ grep -rniE "openai|gpt-4|gpt-3|anthropic|claude-|gemini-|llama|mistral|cohere|wh
 - **All Gemma access goes through one module.** `server/src/gemma/client.js` is the *only* file permitted to make an inference call. Everything else imports from it. This keeps the rule-compliance surface to a single file and makes the architecture diagram honest.
 - **Provider adapter, not provider lock-in.** `GEMMA_PROVIDER=ollama|aistudio` selects transport. Both serve Gemma 4 and only Gemma 4. Ollama is the demo default (proves offline capability); AI Studio is the latency fallback.
 - **Prompts live in `server/src/gemma/prompts/` as versioned files**, one file per pipeline stage, each exporting a `version` string. Never inline a prompt in a route handler.
-- **Every Gemma call is logged** to the `gemma_calls` collection: stage, prompt version, model, modalities, latency ms, raw response, parse success/failure. This powers the in-app Transparency page, which is our proof-of-realness for the Functionality score.
+- **Every Gemma call is logged** to the `gemma_calls` collection: stage, prompt version, model, modalities, latency ms, raw response, parse success/failure. `npm run eval` scores this into the measured-results table (README) — our proof-of-realness for the Functionality score. There is no in-app Transparency page; it was deliberately removed.
 - **Every Gemma JSON response passes through a validator with a repair pass and a `manual_review` fallback.** A malformed model response must degrade gracefully, never 500.
 - **Multimodal ordering:** per the Gemma 4 model card, put image/audio content **before** text in the prompt. Audio clips are capped at **30 seconds**.
 

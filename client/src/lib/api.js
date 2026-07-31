@@ -87,8 +87,6 @@ export const assetUrl = (p) => (p ? url(p) : null);
 /* ------------------------------------------------------------------ public -- */
 
 export const health = () => request('/api/health', { auth: false });
-export const getTransparency = (limit = 100) =>
-  request(`/api/transparency?limit=${limit}`, { auth: false });
 
 /* -------------------------------------------------------------------- auth -- */
 

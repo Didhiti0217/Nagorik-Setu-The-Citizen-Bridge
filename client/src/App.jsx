@@ -1,6 +1,6 @@
-import { NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
-import { LangProvider, useLang } from './i18n/index.jsx';
+import { LangProvider } from './i18n/index.jsx';
 import { useSession } from './lib/session.js';
 import LandingPage from './pages/Landing.jsx';
 import SignInPage from './pages/SignIn.jsx';
@@ -10,36 +10,6 @@ import AdminLoginPage from './pages/AdminLogin.jsx';
 import InviteAcceptPage from './pages/InviteAccept.jsx';
 import DashboardPage from './pages/Dashboard.jsx';
 import CopilotPage from './pages/Copilot.jsx';
-import TransparencyPage from './pages/Transparency.jsx';
-
-function Nav() {
-  const { t, lang, toggle } = useLang();
-  return (
-    <nav className="nav">
-      <div className="brand">
-        <span className="bn">নাগরিক সেতু</span>
-        <small>Nagorik Setu</small>
-      </div>
-      <NavLink to="/report">{t('report')}</NavLink>
-      <NavLink to="/admin">{t('dashboard')}</NavLink>
-      <NavLink to="/transparency">{t('transparency')}</NavLink>
-      <div className="spacer" />
-      <button className="btn ghost" onClick={toggle} title="Switch language">
-        {lang === 'bn' ? 'English' : 'বাংলা'}
-      </button>
-    </nav>
-  );
-}
-
-// Every screen except the landing splash shares the top nav.
-function AppLayout() {
-  return (
-    <>
-      <Nav />
-      <Outlet />
-    </>
-  );
-}
 
 // Where each role belongs when it is somewhere it has no business being. Shared by
 // both guards below so "home" cannot drift between them.
@@ -169,11 +139,6 @@ export default function App() {
         {/* The console used to live here; keep the old link working. */}
         <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
 
-        {/* Deliberately public, like the API behind it: a judge who never signs in
-            can still watch real Gemma calls (server/src/routes/transparency.js). */}
-        <Route element={<AppLayout />}>
-          <Route path="/transparency" element={<TransparencyPage />} />
-        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </LangProvider>

@@ -33,14 +33,6 @@ function BellIcon() {
     </svg>
   );
 }
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" {...stroke}>
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
 function ChatIcon() {
   return (
     <svg viewBox="0 0 24 24" {...stroke}>
@@ -91,10 +83,6 @@ export default function MobileNav({ variant = 'citizen' }) {
           <BellIcon />
           <span>{t('notifications')}</span>
         </button>
-        <NavLink to="/transparency" className="mnav-item">
-          <EyeIcon />
-          <span>{t('transparency')}</span>
-        </NavLink>
         {isAdmin ? (
           <NavLink to="/copilot" className="mnav-item">
             <ChatIcon />

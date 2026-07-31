@@ -87,13 +87,11 @@ one-time code creates the account.
 
 ## 3. Verify (do this before telling anyone the URL)
 
-Render gives you a URL like `https://nagorik-setu-api.onrender.com`. Start with the two
-endpoints that are public on purpose — a judge must be able to inspect real Gemma calls
-without an account:
+Render gives you a URL like `https://nagorik-setu-api.onrender.com`. Start with the one
+endpoint that is public on purpose:
 
 ```bash
 curl https://nagorik-setu-api.onrender.com/api/health
-curl https://nagorik-setu-api.onrender.com/api/transparency
 ```
 
 Expect `{"ok":true,...,"db":"connected","gemma":{"provider":"aistudio",...}}`.
@@ -126,8 +124,8 @@ few seconds later, with an **admin** token from `POST /api/auth/admin/login`:
 curl $API/api/issues -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
-should show one triaged issue, and `/api/transparency` should show the real
-Gemma call with its latency.
+should show one triaged issue, and `npm run eval` (or a direct look at the `gemma_calls`
+collection) should show the real Gemma call with its latency.
 
 Finally, open the deployed frontend in a **private browsing window** and complete both
 sign-ins from the README's demo table. The rules require the demo to be reachable with no
@@ -159,7 +157,6 @@ unpublished one does not.
 | GET | `/api/issues/:id` | admin | issue detail + merge history |
 | GET | `/api/stream?ticket=…` | admin ticket | SSE: `issue:created`, `issue:updated`, `report:failed` |
 | POST | `/api/copilot` | admin | `{question}` → Bangla answer + tool results |
-| GET | `/api/transparency` | **public** | last 100 Gemma calls + p50/p95 |
 | GET | `/api/health` | **public** | liveness + provider + db state |
 
 ---

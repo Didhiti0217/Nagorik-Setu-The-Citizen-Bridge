@@ -157,7 +157,6 @@ try {
   const health = await (await api('/api/health')).json();
   check('GET /api/health ok WITHOUT a token', health.ok === true);
   check('health reports mock provider', health.gemma.provider === 'mock');
-  check('GET /api/transparency is public', (await api('/api/transparency')).status === 200);
 
   /* ===== 2. resident signs in with a phone and a one-time code ============ */
   const otpReq = await api('/api/auth/otp/request', asJson(null, { phone: CITIZEN_PHONE }));
@@ -253,8 +252,9 @@ try {
   check('SSE published issue:created', sseEvents.includes('issue:created'));
   check('SSE published issue:updated', sseEvents.includes('issue:updated'));
 
-  const trans = await (await api('/api/transparency')).json();
-  check('gemma_calls logged to transparency', trans.count > 0);
+  // No public route reads this anymore, but `npm run eval` scores it directly —
+  // check the audit log against the model, not an HTTP endpoint.
+  check('gemma_calls recorded to the audit log', (await GemmaCall.countDocuments()) > 0);
 
   /* ===== 5. reports are owned ============================================ */
   const mine = await (await api('/api/reports/mine', bearer(CT))).json();
