@@ -124,13 +124,13 @@ a { color: var(--brand-bright); }
 }
 
 .landing-tagline {
-  margin: 10px 0 0;
-  max-width: 30ch;
+  margin: 2px 0 0;
+  max-width: 32ch;
   color: #fff;
   text-align: center;
-  font-size: clamp(15px, 1.5vw, 22px);
+  font-size: clamp(18px, 1.9vw, 27px);
   font-weight: 500;
-  line-height: 1.45;
+  line-height: 1.4;
   text-wrap: balance;
   animation: landing-fade 700ms 120ms ease-out both;
 }
@@ -1616,7 +1616,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
    rather than let the doors fall below the fold. */
 @media (max-height: 900px) {
   .landing-art { width: min(72vmin, 500px); }
-  .landing-tagline { font-size: clamp(14px, 1.15vw, 18px); margin-top: 10px; }
+  .landing-tagline { font-size: clamp(16px, 1.4vw, 21px); margin-top: 4px; }
   .landing-doors { margin-top: 18px; }
 }
 @media (max-height: 700px) {
