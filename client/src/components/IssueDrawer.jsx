@@ -37,6 +37,18 @@ const STATUS_LABELS = {
   closed: 'Closed',
 };
 
+/** One photo, own failure state — a handful of pre-photoData uploads (app.js)
+ * have no durable backup and are genuinely gone, which needs its own honest
+ * placeholder rather than the browser's broken-image icon. */
+function EvidencePhoto({ p }) {
+  const [failed, setFailed] = useState(false);
+  return failed ? (
+    <div className="evidence-photo-missing" title="Photo unavailable">🖼️</div>
+  ) : (
+    <img src={assetUrl(p.photoPath)} alt="" loading="lazy" onError={() => setFailed(true)} />
+  );
+}
+
 function StatusUpdateForm({ issueId, onApplied }) {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -169,7 +181,7 @@ export default function IssueDrawer({ issue, onClose }) {
           <div className="evidence-photos">
             {issue.evidencePhotos.map((p, i) => (
               <div className="evidence-photo" key={p.reportId ?? i}>
-                <img src={assetUrl(p.photoPath)} alt="" loading="lazy" />
+                <EvidencePhoto p={p} />
                 <div className="evidence-caption">
                   <span className={`evidence-badge ${p.supportsClaim === false ? 'mismatch' : 'ok'}`}>
                     {p.supportsClaim === false ? '⚠ possible mismatch' : '✓ supports claim'}

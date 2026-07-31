@@ -5,9 +5,14 @@
  * (status: 'failed' / 'manual_review'), because a citizen's complaint must not
  * vanish because the model had a bad day (schemas.js:manualReviewFallback).
  *
- * The photo BYTES are not stored here — only an optional `photoPath` to the file
- * on disk. The base64 image is passed transiently to Gemma and never persisted
- * in the database.
+ * `photoPath` points at a file on Render's disk, which is EPHEMERAL — wiped on
+ * every deploy, while this document (in MongoDB, which is not ephemeral) keeps
+ * remembering the path forever. That mismatch is exactly the bug this field was
+ * added to fix: `photoData` is the same bytes multer already holds in memory for
+ * the upload, kept as a durable backup. `select: false` so it never rides along
+ * on /api/reports/mine or any other normal read — a few MB of binary on every
+ * list request would be its own kind of bug. app.js's /uploads fallback route is
+ * the only thing that ever asks for it explicitly.
  */
 import mongoose from 'mongoose';
 
@@ -17,6 +22,14 @@ const ReportSchema = new Schema({
   rawText: { type: String, default: '' },
   hasPhoto: { type: Boolean, default: false },
   photoPath: { type: String, default: null },
+  photoData: {
+    type: new Schema(
+      { data: Buffer, mimeType: String },
+      { _id: false },
+    ),
+    default: null,
+    select: false,
+  },
   // GeoJSON Point — [lng, lat].
   location: {
     type: { type: String, enum: ['Point'], default: 'Point' },

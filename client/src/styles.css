@@ -639,6 +639,19 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   border: 1px solid var(--border);
   flex: none;
 }
+.evidence-photo-missing {
+  width: 96px;
+  height: 96px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  opacity: 0.4;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
 .evidence-caption { min-width: 0; font-size: 12px; line-height: 1.5; }
 .evidence-badge {
   display: inline-block;
@@ -936,6 +949,14 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
   object-fit: cover;
   background: #fff;
   border: 1px solid var(--line);
+}
+.mc-thumb-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  opacity: 0.4;
+  background: var(--box);
 }
 .mc-body { min-width: 0; flex: 1; }
 .mc-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -1482,6 +1503,7 @@ textarea:focus { outline: 2px solid var(--brand-bright); border-color: transpare
 .dash2 .drawer .chip { background: #fff; border-color: var(--line); color: var(--ink-dim); }
 .dash2 .drawer .evidence-photo { background: var(--box); border-color: var(--line); }
 .dash2 .drawer .evidence-photo img { border-color: var(--line); }
+.dash2 .drawer .evidence-photo-missing { background: #fff; border-color: var(--line); }
 .dash2 .drawer .evidence-elements { color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost { border-color: var(--line); color: var(--ink-dim); }
 .dash2 .drawer .btn.ghost:hover { background: var(--box); color: var(--ink); }

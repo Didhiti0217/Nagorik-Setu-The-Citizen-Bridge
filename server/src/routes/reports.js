@@ -10,9 +10,10 @@
  * So we persist the raw report, return 202 in ~100ms, and process it in the
  * background. The dashboard learns the outcome over SSE when the pin drops.
  *
- * The uploaded photo is base64'd and handed to Gemma transiently; the bytes are
- * also written to disk (optional) so the dashboard can show the evidence photo,
- * but they are never stored in MongoDB.
+ * The uploaded photo is base64'd and handed to Gemma transiently, best-effort
+ * written to disk as a fast path, AND kept as Report.photoData in MongoDB — the
+ * durable copy. Render's disk is wiped on every deploy; Mongo isn't. See the
+ * models/Report.js and app.js /uploads fallback route for the other half of this.
  */
 import { randomUUID } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
@@ -74,20 +75,27 @@ export function reportsRouter({ processReport, uploadsDir }) {
           return res.status(400).json({ error: 'a report needs text or a photo' });
         }
 
-        // Transient base64 for Gemma; optional file on disk for the dashboard.
+        // Transient base64 for Gemma. Disk is a FAST PATH only, not the source of
+        // truth — Render's filesystem is ephemeral and is wiped on every deploy,
+        // so photoData (below) going into MongoDB is what actually keeps a photo
+        // alive across one. photoPath is assigned regardless of whether the disk
+        // write succeeds: the /uploads fallback route (app.js) can serve the same
+        // URL straight from photoData, so a citizen's photo must not depend on a
+        // disk write that this process cannot guarantee will outlive the hour.
         let photo = null;
         let photoPath = null;
+        let photoData = null;
         if (req.file) {
           photo = { data: req.file.buffer.toString('base64'), mimeType: req.file.mimetype };
           const ext = MIME_EXT[req.file.mimetype] || 'bin';
           const name = `${randomUUID()}.${ext}`;
+          photoPath = `/uploads/${name}`;
+          photoData = { data: req.file.buffer, mimeType: req.file.mimetype };
           try {
             await writeFile(path.join(uploadsDir, name), req.file.buffer);
-            photoPath = `/uploads/${name}`;
           } catch (e) {
-            // A failed disk write must not fail the submission — the citizen's
-            // report and its Gemma analysis do not depend on the file existing.
-            console.error('[reports] could not persist photo:', e.message);
+            // Logged, not fatal — the durable copy in Mongo is unaffected.
+            console.error('[reports] could not write photo to disk (non-fatal):', e.message);
           }
         }
 
@@ -95,6 +103,7 @@ export function reportsRouter({ processReport, uploadsDir }) {
           rawText,
           hasPhoto: Boolean(photo),
           photoPath,
+          photoData,
           location: { type: 'Point', coordinates: [lng, lat] },
           areaHint: req.body.areaHint ? req.body.areaHint.toString() : null,
           // An admin filing from the console is allowed (it keeps the smoke test

@@ -116,6 +116,11 @@ function ComplaintCard({ report, t, lang, category, onRevoked }) {
   const [revoking, setRevoking] = useState(false);
   const [revokeError, setRevokeError] = useState(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  // A handful of photos uploaded before Report.photoData existed (app.js) have
+  // no durable backup and are genuinely gone from Render's ephemeral disk —
+  // this is the honest "we lost it" state, not a loading glitch, so it gets its
+  // own quiet placeholder rather than the browser's broken-image icon.
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   async function confirmRevoke() {
     setRevoking(true);
@@ -133,7 +138,17 @@ function ComplaintCard({ report, t, lang, category, onRevoked }) {
   return (
     <article className="mc-card">
       {report.photoPath && (
-        <img className="mc-thumb" src={assetUrl(report.photoPath)} alt="" loading="lazy" />
+        photoFailed ? (
+          <div className="mc-thumb mc-thumb-missing" title="Photo unavailable">🖼️</div>
+        ) : (
+          <img
+            className="mc-thumb"
+            src={assetUrl(report.photoPath)}
+            alt=""
+            loading="lazy"
+            onError={() => setPhotoFailed(true)}
+          />
+        )
       )}
 
       <div className="mc-body">

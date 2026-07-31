@@ -15,6 +15,7 @@ import cors from 'cors';
 
 import { dbState } from './lib/db.js';
 import { activeConfig } from './gemma/index.js';
+import { Report } from './models/Report.js';
 
 import { notFound, errorHandler } from './middleware/errors.js';
 
@@ -45,8 +46,7 @@ export function createApp({ processReport }) {
   app.use(cors({ origin: origins }));
   app.use(express.json({ limit: '2mb' }));
 
-  // Evidence photos, served for the dashboard. Ephemeral on most hosts — fine
-  // for a demo, and the DB does not depend on them existing.
+  // Evidence photos, served for the dashboard.
   //
   // Left public, knowingly. Filenames are random UUIDs and there is no directory
   // listing, so a photo is unguessable, but anyone holding a URL can fetch it.
@@ -55,6 +55,28 @@ export function createApp({ processReport }) {
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   fs.mkdirSync(uploadsDir, { recursive: true });
   app.use('/uploads', express.static(uploadsDir));
+
+  // Render's disk is EPHEMERAL — wiped on every deploy, which silently 404'd
+  // every photo uploaded before the most recent one, even though Mongo (not
+  // ephemeral) still remembered the path forever. express.static calls next()
+  // rather than answering on a miss, so this only runs when the file is truly
+  // gone from disk: the durable copy in Report.photoData (routes/reports.js)
+  // is what actually keeps the URL alive across a redeploy.
+  app.get('/uploads/:filename', async (req, res) => {
+    try {
+      const report = await Report.findOne({ photoPath: `/uploads/${req.params.filename}` })
+        .select('+photoData')
+        .lean();
+      const raw = report?.photoData?.data;
+      if (!raw) return res.status(404).json({ error: 'not found' });
+      res.set('Content-Type', report.photoData.mimeType || 'application/octet-stream');
+      res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      res.send(Buffer.isBuffer(raw) ? raw : Buffer.from(raw.buffer ?? raw));
+    } catch (err) {
+      console.error('[uploads] fallback lookup failed:', err.message);
+      res.status(500).json({ error: 'failed to load photo' });
+    }
+  });
 
   // Public, and it must stay that way: render.yaml points healthCheckPath here,
   // so guarding it would make Render consider every deploy unhealthy.

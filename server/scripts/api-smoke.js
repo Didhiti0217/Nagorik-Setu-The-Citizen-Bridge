@@ -13,6 +13,10 @@
  *
  * Run: npm run api:smoke
  */
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 import { connectDb } from '../src/lib/db.js';
@@ -89,6 +93,9 @@ const FIXTURES = {
 };
 
 const TONGI = { lng: 90.4012, lat: 23.8918 };
+// The same real directory app.js writes to — createApp() computes this path
+// internally and does not take it as a parameter, so this has to match exactly.
+const UPLOADS_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'uploads');
 const CITIZEN_PHONE = '01700000000';
 const OTHER_PHONE = '01811111111';
 const ADMIN_EMAIL = 'smoke-admin@nagoriksetu.demo';
@@ -406,6 +413,47 @@ try {
   check('the citizen-safe timeline shows the auto-close, not AI internals',
     revokedHistory.history.some((h) => h.newStatus === 'closed') && !JSON.stringify(revokedHistory).includes('confidence'));
   check('a stranger cannot read this report\'s timeline', (await api(`/api/reports/${r3body.id}/status-history`, bearer(NOT_OWNER_TOKEN))).status === 404);
+
+  /* ===== 12. a photo survives its disk file being wiped (Render redeploy) === */
+  // This is the actual bug: Render's disk is ephemeral and gets wiped on every
+  // deploy, so a photoPath that only pointed at disk 404'd forever after the
+  // NEXT deploy, even though Mongo still remembered the path. Report.photoData
+  // is the durable copy; app.js's /uploads fallback route is what serves it once
+  // the disk file is gone. Prove the whole round trip, not just that upload works.
+  const PHOTO_BYTES = Buffer.from('not a real jpeg, just deterministic test bytes for a byte-exact comparison');
+  const form = new FormData();
+  form.set('rawText', 'exposed wire near the port area, someone will get hurt');
+  form.set('lng', '91.8');
+  form.set('lat', '22.3');
+  form.set('photo', new Blob([PHOTO_BYTES], { type: 'image/png' }), 'test.png');
+
+  const photoRes = await fetch(`${base}/api/reports`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${CT}` },
+    body: form,
+  });
+  const photoBody = await photoRes.json();
+  check('a report with a photo still returns 202', photoRes.status === 202);
+
+  const photoLinked = await waitFor(async () => (await (await api(`/api/reports/${photoBody.id}`, bearer(CT))).json()).photoPath);
+  check('the photo report links up with a photoPath', photoLinked);
+  const photoReport = await (await api(`/api/reports/${photoBody.id}`, bearer(CT))).json();
+  const photoUrl = `${base}${photoReport.photoPath}`;
+
+  const fromDisk = await fetch(photoUrl);
+  const fromDiskBytes = Buffer.from(await fromDisk.arrayBuffer());
+  check('freshly uploaded, the photo serves from disk', fromDisk.status === 200 && fromDiskBytes.equals(PHOTO_BYTES));
+
+  // Simulate exactly what a Render redeploy does: the file is gone, the Mongo
+  // document is not.
+  const diskPath = path.join(UPLOADS_DIR, path.basename(photoReport.photoPath));
+  await unlink(diskPath);
+
+  const fromFallback = await fetch(photoUrl);
+  const fromFallbackBytes = Buffer.from(await fromFallback.arrayBuffer());
+  check('after the disk file is gone (simulated redeploy), the same URL still serves the photo',
+    fromFallback.status === 200 && fromFallbackBytes.equals(PHOTO_BYTES));
+  check('the fallback serves the correct content-type', fromFallback.headers.get('content-type') === 'image/png');
 
   console.log(`\n${'='.repeat(60)}`);
   if (failures.length === 0) {
