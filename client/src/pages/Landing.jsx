@@ -6,6 +6,11 @@
  * admin door is deliberately smaller and quieter — far fewer people need it, and
  * a resident must never feel they have to pick correctly to report a broken thing.
  *
+ * A third, quieter link below the doors goes straight to Emergency Contact
+ * (pages/EmergencyContact.jsx) — a number worth calling right now must be one
+ * tap from the very first screen, not buried inside the citizen app's own nav
+ * behind a sign-in. No auth guard on that route either, for the same reason.
+ *
  * The logo asset is white-on-transparent (and carries the Bangla wordmark), so it
  * sits directly on the brand crimson field with no processing.
  */
@@ -28,6 +33,7 @@ export default function LandingPage() {
 
   const toReport = () => navigate('/report');
   const toAdmin = () => navigate('/admin/login');
+  const toEmergency = () => navigate('/emergency');
 
   return (
     <div className="landing">
@@ -72,6 +78,14 @@ export default function LandingPage() {
           <small className={bn ? 'bn' : ''}>{t('adminDoorHint')}</small>
         </div>
       </div>
+
+      <button
+        type="button"
+        className={`landing-emergency ${bn ? 'bn' : ''}`}
+        onClick={toEmergency}
+      >
+        🚨 {t('emergencyContact')}
+      </button>
     </div>
   );
 }

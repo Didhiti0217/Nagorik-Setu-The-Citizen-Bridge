@@ -6,6 +6,7 @@ import LandingPage from './pages/Landing.jsx';
 import SignInPage from './pages/SignIn.jsx';
 import ReportPage from './pages/Report.jsx';
 import MyComplaintsPage from './pages/MyComplaints.jsx';
+import EmergencyContactPage from './pages/EmergencyContact.jsx';
 import AdminLoginPage from './pages/AdminLogin.jsx';
 import InviteAcceptPage from './pages/InviteAccept.jsx';
 import DashboardPage from './pages/Dashboard.jsx';
@@ -105,6 +106,9 @@ export default function App() {
             </Require>
           }
         />
+        {/* Deliberately NOT behind Require — a phone number worth calling in an
+            emergency must not be gated behind an OTP round trip. */}
+        <Route path="/emergency" element={<EmergencyContactPage />} />
 
         {/* Corporation console. */}
         <Route

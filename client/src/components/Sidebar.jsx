@@ -1,9 +1,9 @@
 /**
  * The left rail, in two variants.
  *
- * `citizen` (default) is the resident's app: report, my complaints.
- * `admin` is the corporation console: work queue, copilot, and the signed-in
- * jurisdiction with a way out.
+ * `citizen` (default) is the resident's app: report, my complaints, emergency contact.
+ * `admin` is the corporation console: work queue, copilot, emergency contact, and
+ * the signed-in jurisdiction with a way out.
  *
  * The variants exist mainly to keep the console off the citizen rail. A resident
  * has no business in a municipal work queue, and a nav link that leads somewhere
@@ -62,15 +62,24 @@ function CopilotIcon() {
     </svg>
   );
 }
+function EmergencyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" {...stroke}>
+      <path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z" />
+    </svg>
+  );
+}
 
 const NAV = {
   citizen: [
     { to: '/report', key: 'report', Icon: ReportIcon },
     { to: '/my-complaints', key: 'myComplaints', Icon: ComplaintsIcon },
+    { to: '/emergency', key: 'emergencyContact', Icon: EmergencyIcon },
   ],
   admin: [
     { to: '/admin', key: 'dashboard', Icon: DashboardIcon },
     { to: '/copilot', key: 'copilot', Icon: CopilotIcon },
+    { to: '/emergency', key: 'emergencyContact', Icon: EmergencyIcon },
   ],
 };
 

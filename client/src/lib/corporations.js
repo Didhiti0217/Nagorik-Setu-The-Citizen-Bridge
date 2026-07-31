@@ -27,6 +27,8 @@ export const CORPORATIONS = [
     center: [90.4203, 23.9999],
     zoom: 11,
     bbox: [90.20, 23.86, 90.58, 24.15],
+    // Demo hotline — not a real published number. See EmergencyContact.jsx.
+    emergencyPhone: '01712345001',
   },
   {
     id: 'dhaka-north',
@@ -38,6 +40,7 @@ export const CORPORATIONS = [
     center: [90.3654, 23.8223],
     zoom: 12,
     bbox: [90.30, 23.76, 90.46, 23.86],
+    emergencyPhone: '01812345002',
   },
   {
     id: 'dhaka-south',
@@ -49,6 +52,7 @@ export const CORPORATIONS = [
     center: [90.4074, 23.7104],
     zoom: 12,
     bbox: [90.34, 23.66, 90.48, 23.76],
+    emergencyPhone: '01912345003',
   },
   {
     id: 'narayanganj',
@@ -60,6 +64,7 @@ export const CORPORATIONS = [
     center: [90.4990, 23.6238],
     zoom: 12,
     bbox: [90.44, 23.57, 90.60, 23.72],
+    emergencyPhone: '01612345004',
   },
   {
     id: 'chattogram',
@@ -71,6 +76,7 @@ export const CORPORATIONS = [
     center: [91.7832, 22.3569],
     zoom: 12,
     bbox: [91.70, 22.25, 91.90, 22.45],
+    emergencyPhone: '01512345005',
   },
 ];
 

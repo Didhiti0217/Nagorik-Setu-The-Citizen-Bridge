@@ -153,7 +153,6 @@ export default function DashboardPage() {
     return {
       issues: scoped.length,
       reports,
-      collapsed: reports - scoped.length,
       urgent: scoped.filter((i) => i.severity >= 4).length,
     };
   }, [scoped]);
@@ -238,10 +237,6 @@ export default function DashboardPage() {
           <div className="d2-stat">
             <b>{stats.issues}</b>
             <span>Issues</span>
-          </div>
-          <div className="d2-stat" title="Duplicate tickets removed by Gemma">
-            <b className="accent">−{stats.collapsed}</b>
-            <span>Deduped</span>
           </div>
           <div className="d2-stat">
             <b className="danger">{stats.urgent}</b>
